@@ -1,0 +1,75 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>lab</groupId>
+	<artifactId>akka-spike</artifactId>
+	<version>0.9</version>
+	<packaging>jar</packaging>
+
+	<name>akka-lab</name>
+	<url>http://maven.apache.org</url>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+	
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
+				<configuration>
+					<compilerVersion>1.6</compilerVersion>
+				</configuration>
+			</plugin>
+		</plugins>
+		
+	</build>
+
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.8.2</version>
+			<type>jar</type>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>se.scalablesolutions.akka</groupId>
+			<artifactId>akka-actor</artifactId>
+			<version>1.0-RC1</version>
+		</dependency>
+		<dependency>
+			<groupId>se.scalablesolutions.akka</groupId>
+			<artifactId>akka-remote</artifactId>
+			<version>1.0-RC1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongo-java-driver</artifactId>
+			<version>2.3</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+	</dependencies>
+	<repositories>
+		<repository>
+			<id>Akka</id>
+			<name>Akka Maven2 Repository</name>
+			<url>http://www.scalablesolutions.se/akka/repository/ </url>
+		</repository>
+		<repository>
+			<id>GuiceyFruit</id>
+			<name>GuiceyFruit Maven2 Repository</name>
+			<url>http://guiceyfruit.googlecode.com/svn/repo/releases/ </url>
+		</repository>
+
+		<repository>
+			<id>JBoss</id>
+			<name>JBoss Maven2 Repository</name>
+			<url>https://repository.jboss.org/nexus/content/groups/public/ </url>
+		</repository>
+	</repositories>
+</project>
