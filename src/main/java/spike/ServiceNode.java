@@ -32,9 +32,6 @@ public class ServiceNode {
     }
 
     private void startActors() {
-        ActorRef cdrAggregatorActor = actorOf(CdrAggregator.class);
-        servicenodeServer.register(SystemConfiguration.cdrAggregatorId, cdrAggregatorActor);
-
         ActorRef proxyCallMonitorActor = actorOf(ProxyCallMonitor.class);
         servicenodeServer.register(SystemConfiguration.proxyCallMonitorId, proxyCallMonitorActor);
     }

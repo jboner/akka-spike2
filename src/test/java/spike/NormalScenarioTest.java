@@ -1,7 +1,9 @@
 package spike;
 
+import static spike.TestHelper.compareFiles;
 import static spike.TestHelper.startJVM;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,8 +40,7 @@ public class NormalScenarioTest {
 
         Thread.sleep(5000);
 
-        // compareFiles(new File("./src/main/resources/cdr-reference.txt"), new
-        // File("./logs/cdr.txt"));
+        compareFiles(new File("./src/main/resources/cdr-reference.txt"), new File("./logs/cdr.txt"));
     }
 
 }

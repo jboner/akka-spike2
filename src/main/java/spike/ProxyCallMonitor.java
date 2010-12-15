@@ -132,13 +132,7 @@ public class ProxyCallMonitor extends UntypedActor {
 
     private void initCdrAggregator() {
         if (cdrAggregator == null) {
-            // TODO how to do this? actor id and registered id?
-            // ActorRef[] matching =
-            // ActorRegistry.actorsFor(SystemConfiguration.cdrAggregatorId);
-            ActorRef[] matching = ActorRegistry.actorsFor(CdrAggregator.class.getName());
-            if (matching.length > 0) {
-                cdrAggregator = matching[0];
-            }
+            cdrAggregator = actorOf(CdrAggregator.class).start();
         }
     }
 }
