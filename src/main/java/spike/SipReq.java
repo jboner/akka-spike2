@@ -7,9 +7,11 @@ public class SipReq implements Serializable {
     private final String callId;
     private final int inc;
     private final boolean done;
+    private final String eventId;
 
-    public SipReq(String callId, int inc, boolean done) {
+    public SipReq(String callId, String eventId, int inc, boolean done) {
         this.callId = callId;
+        this.eventId = eventId;
         this.inc = inc;
         this.done = done;
     }
@@ -26,9 +28,13 @@ public class SipReq implements Serializable {
         return done;
     }
 
+    public String getEventId() {
+        return eventId;
+    }
+
     @Override
     public String toString() {
-        return "SipReq: " + callId + "\t => " + inc + (done ? " DONE" : "");
+        return "SipReq: " + eventId + " - " + callId + "\t => " + inc + (done ? " DONE" : "");
     }
 
 }

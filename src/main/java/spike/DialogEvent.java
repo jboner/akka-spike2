@@ -7,9 +7,11 @@ public class DialogEvent implements Serializable {
     private final String callId;
     private final int inc;
     private final boolean done;
+    private final String eventId;
 
-    public DialogEvent(String callId, int inc, boolean done) {
+    public DialogEvent(String callId, String eventId, int inc, boolean done) {
         this.callId = callId;
+        this.eventId = eventId;
         this.inc = inc;
         this.done = done;
     }
@@ -26,9 +28,13 @@ public class DialogEvent implements Serializable {
         return done;
     }
 
+    public String getEventId() {
+        return eventId;
+    }
+
     @Override
     public String toString() {
-        return "DialogEvent: " + callId + "\t => " + inc + (done ? " DONE" : "");
+        return "DialogEvent: " + eventId + " - " + callId + "\t => " + inc + (done ? " DONE" : "");
     }
 
 }
