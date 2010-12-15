@@ -73,20 +73,30 @@ public class CdrAggregator extends UntypedActor {
             return;
         }
 
-        logger.info("Publishing from CdrAggregator:\t" + cdrEvent.toString());
-
         initReporterActor();
 
-        reporterActor.sendOneWay(cdrEvent);
-
-        logger.info("Sent:\t" + cdrEvent.toString());
+        if (reporterActor != null) {
+            logger.info("Publishing from CdrAggregator:\t" + cdrEvent.toString());
+            reporterActor.sendOneWay(cdrEvent);
+            logger.info("Published from CdrAggregator:\t" + cdrEvent.toString());
+        }
 
     }
 
     private void initReporterActor() {
         if (reporterActor == null) {
-            // TODO use registry instead? shouldn't have to know host/port
+
             reporterActor = RemoteClient.actorFor(reporterId, reportnodeHost, reportnodePort);
+            // In Akka cloud there is a cluster aware ActorRegistry, to avoid
+            // knowing host/port
+            // ActorRef[] matching =
+            // ActorRegistry.actorsFor(Reporter.class.getName());
+            // if (matching != null && matching.length > 0) {
+            // reporterActor = matching[0];
+            // }
+        }
+        if (reporterActor == null) {
+            logger.info("No Reporter");
         }
     }
 

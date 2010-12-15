@@ -97,8 +97,6 @@ public class ProxyCallMonitor extends UntypedActor {
     }
 
     private void publishDialogEvent(DialogEvent event) {
-        logger.info("Publishing from ProxyCallMonitor:\t" + event.toString());
-
         initBuddy();
         if (isPrimaryNode && buddy != null) {
             try {
@@ -112,6 +110,7 @@ public class ProxyCallMonitor extends UntypedActor {
         initCdrAggregator();
 
         if (cdrAggregator != null) {
+            logger.info("Publishing from ProxyCallMonitor to CdrAggregator:\t" + event.toString());
             cdrAggregator.sendOneWay(event);
             logger.info("Published from ProxyCallMonitor to CdrAggregator:\t" + event.toString());
         }
@@ -123,14 +122,11 @@ public class ProxyCallMonitor extends UntypedActor {
             // ActorRef[] matching =
             // ActorRegistry.actorsFor(SystemConfiguration.cdrAggregatorId);
             ActorRef[] matching = ActorRegistry.actorsFor(ProxyCallMonitor.class.getName());
-            if (matching.length > 0) {
+            if (matching != null && matching.length > 0) {
                 UUID myUuid = getContext().getUuid();
-                logger.info("My uuid: " + myUuid);
                 for (ActorRef each : Arrays.asList(matching)) {
-                    logger.info("Possible match: " + each.getUuid());
                     if (!each.getUuid().equals(myUuid)) {
                         buddy = each;
-                        logger.info("Found match: " + each.getUuid());
                         break;
                     }
                 }
