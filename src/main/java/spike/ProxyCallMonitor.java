@@ -32,6 +32,8 @@ public class ProxyCallMonitor extends UntypedActor {
         try {
             if (message instanceof SipReq) {
                 handleSipReq(message);
+                // TODO safe or unsafe?
+                getContext().replyUnsafe("100 Trying");
             } else if (message instanceof DialogEvent) {
                 handleDialogEvent(message);
             }
@@ -98,10 +100,13 @@ public class ProxyCallMonitor extends UntypedActor {
         logger.info("Publishing from ProxyCallMonitor:\t" + event.toString());
 
         initBuddy();
-
         if (isPrimaryNode && buddy != null) {
-            buddy.sendOneWay(event);
-            logger.info("Published from ProxyCallMonitor to Buddy:\t" + event.toString());
+            try {
+                buddy.sendOneWay(event);
+                logger.info("Published from ProxyCallMonitor to Buddy:\t" + event.toString());
+            } catch (RuntimeException e) {
+                logger.info("Failed to publish from ProxyCallMonitor to Buddy:\t" + event.toString());
+            }
         }
 
         initCdrAggregator();
@@ -120,13 +125,19 @@ public class ProxyCallMonitor extends UntypedActor {
             ActorRef[] matching = ActorRegistry.actorsFor(ProxyCallMonitor.class.getName());
             if (matching.length > 0) {
                 UUID myUuid = getContext().getUuid();
+                logger.info("My uuid: " + myUuid);
                 for (ActorRef each : Arrays.asList(matching)) {
+                    logger.info("Possible match: " + each.getUuid());
                     if (!each.getUuid().equals(myUuid)) {
                         buddy = each;
+                        logger.info("Found match: " + each.getUuid());
                         break;
                     }
                 }
             }
+        }
+        if (buddy == null) {
+            logger.info("No Buddy");
         }
     }
 
@@ -134,5 +145,10 @@ public class ProxyCallMonitor extends UntypedActor {
         if (cdrAggregator == null) {
             cdrAggregator = actorOf(CdrAggregator.class).start();
         }
+    }
+
+    @Override
+    public void postStop() {
+        logger.info("Stopped ProxyCallMonitor");
     }
 }

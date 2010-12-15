@@ -11,6 +11,7 @@ import akka.remote.RemoteServer;
 public class ServiceNode {
 
     private RemoteServer servicenodeServer;
+    private ActorRef proxyCallMonitorActor;
 
     public static void main(String[] args) {
         ServiceNode servicenode = new ServiceNode();
@@ -32,8 +33,12 @@ public class ServiceNode {
     }
 
     private void startActors() {
-        ActorRef proxyCallMonitorActor = actorOf(ProxyCallMonitor.class);
+        proxyCallMonitorActor = actorOf(ProxyCallMonitor.class);
         servicenodeServer.register(SystemConfiguration.proxyCallMonitorId, proxyCallMonitorActor);
     }
 
+    public void stop() {
+        proxyCallMonitorActor.stop();
+        servicenodeServer.shutdown();
+    }
 }
