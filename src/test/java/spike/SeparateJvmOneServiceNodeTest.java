@@ -11,7 +11,16 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class JvmWithTwoTest {
+/**
+ * Test case #0
+ * 
+ * <pre>
+ * S1: o
+ * S2: x
+ * </pre>
+ * 
+ */
+public class SeparateJvmOneServiceNodeTest {
 
     List<Process> processes = new ArrayList<Process>();
 
@@ -19,8 +28,6 @@ public class JvmWithTwoTest {
     public void setUp() throws Exception {
         Process servicenode1Process = startJVM(ServiceNode.class, "1");
         processes.add(servicenode1Process);
-        Process servicenode2Process = startJVM(ServiceNode.class, "2");
-        processes.add(servicenode2Process);
         Process reportProcess = startJVM(ReportNode.class, null);
         processes.add(reportProcess);
     }

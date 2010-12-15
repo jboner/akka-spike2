@@ -1,0 +1,34 @@
+
+S1 = servicenode 1
+S2 = servicenode 2
+o = running, primary
+z = running, standby
+x = down (crash)
+
+#0
+S1: o
+S2: x
+
+#1
+S1: o
+S2: z
+
+#2
+S1: o x
+S2: z o
+
+#3
+S1: o o x
+S2: x z o
+
+#4
+S1: o x z o
+S2: z o o x
+
+#5
+S1: o x z o o x
+S2: z o o x z o
+
+#6
+S1: o o o o o x
+S2: z x z x z o

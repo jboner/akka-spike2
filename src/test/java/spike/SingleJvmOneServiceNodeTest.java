@@ -7,7 +7,16 @@ import java.io.File;
 import org.junit.Before;
 import org.junit.Test;
 
-public class SimpleTest {
+/**
+ * Test case #0
+ * 
+ * <pre>
+ * S1: o
+ * S2: x
+ * </pre>
+ * 
+ */
+public class SingleJvmOneServiceNodeTest {
 
     @Before
     public void setUp() throws Exception {
