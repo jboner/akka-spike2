@@ -1,14 +1,10 @@
 package spike;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static spike.TestHelper.compareFiles;
-import static spike.TestHelper.startJVM;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -20,38 +16,16 @@ import org.junit.Test;
  * </pre>
  * 
  */
-public class SeparateJvmTwoServiceNodesTest {
-
-    List<Process> processes = new ArrayList<Process>();
-
-    @Before
-    public void setUp() throws Exception {
-        Process servicenode1Process = startJVM(ServiceNode.class, "1");
-        processes.add(servicenode1Process);
-        Process servicenode2Process = startJVM(ServiceNode.class, "2");
-        processes.add(servicenode2Process);
-        Process reportProcess = startJVM(ReportNode.class, null);
-        processes.add(reportProcess);
-    }
-
-    @After
-    public void tearDown() {
-        for (Process each : processes) {
-            try {
-                each.destroy();
-            } catch (RuntimeException ignore) {
-            }
-        }
-    }
+public class SeparateJvmTwoServiceNodesTest extends SeparateJvmTest {
 
     @Test
     public void testNormalCase() throws Exception {
         EdgeProxy producer = new EdgeProxy();
-        producer.simulateLoad();
+        producer.simulateLoad(1000, 5, SECONDS);
 
-        Thread.sleep(5000);
+        Thread.sleep(1000);
 
-        compareFiles(new File("./src/main/resources/cdr-reference.txt"), new File("./logs/cdr.txt"));
+        compareFiles(new File("./src/main/resources/cdr-reference-1000.txt"), new File("./logs/cdr.txt"));
     }
 
 }

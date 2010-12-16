@@ -1,17 +1,13 @@
 package spike;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static spike.TestHelper.compareFiles;
-import static spike.TestHelper.startJVM;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -23,32 +19,15 @@ import org.junit.Test;
  * </pre>
  * 
  */
-public class SeparateJvmFailover2Test {
+public class SeparateJvmFailover2Test extends SeparateJvmTest {
 
     ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-    List<Process> processes = new ArrayList<Process>();
-    private Process servicenode1Process;
 
-    @Before
-    public void setUp() throws Exception {
-        Process reportProcess = startJVM(ReportNode.class, null);
-        processes.add(reportProcess);
-        servicenode1Process = startJVM(ServiceNode.class, "1");
-        processes.add(servicenode1Process);
-        Process servicenode2Process = startJVM(ServiceNode.class, "2");
-        processes.add(servicenode2Process);
-    }
-
+    @Override
     @After
     public void tearDown() {
         executor.shutdownNow();
-        for (Process each : processes) {
-            try {
-                each.destroy();
-            } catch (RuntimeException ignore) {
-            }
-        }
-
+        super.tearDown();
     }
 
     @Test
@@ -62,14 +41,14 @@ public class SeparateJvmFailover2Test {
                 servicenode1Process.destroy();
             }
         };
-        executor.schedule(killServiceNode1, 2, TimeUnit.SECONDS);
+        executor.schedule(killServiceNode1, 2, SECONDS);
 
         EdgeProxy producer = new EdgeProxy();
-        producer.simulateLoad();
+        producer.simulateLoad(1000, 5, SECONDS);
 
-        Thread.sleep(5000);
+        Thread.sleep(1000);
 
-        compareFiles(new File("./src/main/resources/cdr-reference.txt"), new File("./logs/cdr.txt"));
+        compareFiles(new File("./src/main/resources/cdr-reference-1000.txt"), new File("./logs/cdr.txt"));
     }
 
 }

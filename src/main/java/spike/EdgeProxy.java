@@ -1,10 +1,13 @@
 package spike;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static spike.SystemConfiguration.proxyCallMonitorId;
 import static spike.SystemConfiguration.servicenodeHost1;
 import static spike.SystemConfiguration.servicenodeHost2;
 import static spike.SystemConfiguration.servicenodePort1;
 import static spike.SystemConfiguration.servicenodePort2;
+
+import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +25,15 @@ public class EdgeProxy {
 
     public static void main(String[] args) {
         EdgeProxy manager = new EdgeProxy();
-        manager.simulateLoad();
+        int n = 1000;
+        long duration = 10;
+        if (args.length > 0) {
+            n = Integer.valueOf(args[0]);
+        }
+        if (args.length > 1) {
+            duration = Long.valueOf(args[1]);
+        }
+        manager.simulateLoad(n, duration, TimeUnit.SECONDS);
 
     }
 
@@ -37,13 +48,16 @@ public class EdgeProxy {
         activeServiceNode = servicenode1;
     }
 
-    public void simulateLoad() {
-        for (int i = 0; i < 1000; i++) {
-            produce(i, 0);
+    public void simulateLoad(int n, long duration, TimeUnit durationUnit) {
+        long sleepMillis = MILLISECONDS.convert(duration, durationUnit) / n;
+        sleepMillis--;
+
+        for (int i = 0; i < n; i++) {
+            produce(i, 0, sleepMillis);
         }
     }
 
-    private void produce(int i, int retry) {
+    private void produce(int i, int retry, long sleepMillis) {
         if (retry > 5) {
             throw new RuntimeException("Too many retry attempts");
         }
@@ -76,18 +90,19 @@ public class EdgeProxy {
         } catch (RuntimeException e) {
             logger.info("Timeout from from EdgeProxy: " + req);
             toggleServiceNode();
-            produce(i, retry + 1);
+            produce(i, retry + 1, sleepMillis);
         }
 
-        sleep(10);
+        sleep(sleepMillis);
     }
 
-    private void sleep(int millis) {
+    private void sleep(long millis) {
+        if (millis <= 0) {
+            return;
+        }
         try {
             Thread.sleep(millis);
         } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
         }
     }
 

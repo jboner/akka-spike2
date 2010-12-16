@@ -1,10 +1,10 @@
 package spike;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static spike.TestHelper.compareFiles;
 
 import java.io.File;
 
-import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -16,24 +16,21 @@ import org.junit.Test;
  * </pre>
  * 
  */
-public class SingleJvmOneServiceNodeTest {
+public class SingleJvmOneServiceNodeTest extends SingleJvmTest {
 
-    @Before
-    public void setUp() throws Exception {
-        ReportNode reportNode = new ReportNode();
-        reportNode.start();
-        ServiceNode serviceNode = new ServiceNode();
-        serviceNode.start();
+    @Override
+    protected boolean isServiceNode2ToBeStarted() {
+        return false;
     }
 
     @Test
     public void testNormal() throws Exception {
         EdgeProxy edgeProxy = new EdgeProxy();
-        edgeProxy.simulateLoad();
+        edgeProxy.simulateLoad(1000, 5, SECONDS);
 
-        Thread.sleep(2000);
+        Thread.sleep(1000);
 
-        compareFiles(new File("./src/main/resources/cdr-reference.txt"), new File("./logs/cdr.txt"));
+        compareFiles(new File("./src/main/resources/cdr-reference-1000.txt"), new File("./logs/cdr.txt"));
     }
 
 }
