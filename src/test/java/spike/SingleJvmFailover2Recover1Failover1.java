@@ -1,10 +1,6 @@
 package spike;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static spike.SystemConfiguration.servicenodeHost1;
-import static spike.SystemConfiguration.servicenodeHost2;
-import static spike.SystemConfiguration.servicenodePort1;
-import static spike.SystemConfiguration.servicenodePort2;
 import static spike.TestHelper.compareFiles;
 
 import java.io.File;
@@ -13,7 +9,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 /**
