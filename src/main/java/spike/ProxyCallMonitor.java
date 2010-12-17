@@ -139,7 +139,13 @@ public class ProxyCallMonitor extends UntypedActor {
 
     private void initCdrAggregator() {
         if (cdrAggregator == null) {
-            cdrAggregator = actorOf(CdrAggregator.class).start();
+            ActorRef[] matching = ActorRegistry.actorsFor(CdrAggregator.class);
+            if (matching != null && matching.length > 0) {
+                cdrAggregator = matching[0];
+            }
+        }
+        if (cdrAggregator == null) {
+            logger.info("No CdrAggregator");
         }
     }
 

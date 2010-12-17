@@ -31,7 +31,7 @@ public class SingleJvmFailover2Test extends SingleJvmTest {
     }
 
     @Test
-    public void testNormal() throws Exception {
+    public void testFailover() throws Exception {
         Runnable killServiceNode1 = new Runnable() {
             @Override
             public void run() {

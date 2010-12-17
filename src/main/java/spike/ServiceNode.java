@@ -12,6 +12,7 @@ public class ServiceNode {
 
     private RemoteServer servicenodeServer;
     private ActorRef proxyCallMonitorActor;
+    private ActorRef cdrAggregator;
 
     public static void main(String[] args) {
         ServiceNode servicenode = new ServiceNode();
@@ -35,9 +36,11 @@ public class ServiceNode {
     private void startActors() {
         proxyCallMonitorActor = actorOf(ProxyCallMonitor.class);
         servicenodeServer.register(SystemConfiguration.proxyCallMonitorId, proxyCallMonitorActor);
+        cdrAggregator = actorOf(CdrAggregator.class).start();
     }
 
     public void stop() {
+        cdrAggregator.stop();
         proxyCallMonitorActor.stop();
         servicenodeServer.shutdown();
     }
