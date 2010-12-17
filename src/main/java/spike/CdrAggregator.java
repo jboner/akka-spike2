@@ -1,9 +1,5 @@
 package spike;
 
-import static spike.SystemConfiguration.reporterId;
-import static spike.SystemConfiguration.reportnodeHost;
-import static spike.SystemConfiguration.reportnodePort;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,18 +8,19 @@ import org.slf4j.LoggerFactory;
 
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
-import akka.remote.RemoteClient;
 
 public class CdrAggregator extends UntypedActor {
 
-    private static Logger logger = LoggerFactory.getLogger(CdrAggregator.class);
+    private static final Logger logger = LoggerFactory.getLogger(CdrAggregator.class);
 
     private final Map<String, Long> currentState = new HashMap<String, Long>();
-    private ActorRef reporterActor;
+    private final ActorRef proxyCallMonitor;
+    private String etag;
+    private final Publisher publisher = new Publisher(logger);
+    private boolean subscriptionsInitialized;
 
-    private boolean isPrimaryNode;
-
-    public CdrAggregator() {
+    public CdrAggregator(ActorRef proxyCallMonitor) {
+        this.proxyCallMonitor = proxyCallMonitor;
     }
 
     @Override
@@ -31,20 +28,43 @@ public class CdrAggregator extends UntypedActor {
         try {
             if (message instanceof HAState) {
                 promoteMeToPrimaryNode();
-            } else {
-                DialogEvent event = (DialogEvent) message;
-                apply(event);
+            } else if (message instanceof DialogEvent) {
+                handleDialogEvent((DialogEvent) message);
+            } else if (message instanceof Subscribe) {
+                handleSubscribe((Subscribe) message);
+            } else if (message instanceof Unsubscribe) {
+                handleUnsubscribe((Unsubscribe) message);
+            } else if (message instanceof Heartbeat) {
+                handleHeartbeat((Heartbeat) message);
             }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
     }
 
-    private void promoteMeToPrimaryNode() {
-        isPrimaryNode = true;
+    private void handleHeartbeat(Heartbeat message) {
+        initSubscriptions();
     }
 
-    private void apply(DialogEvent event) {
+    private void handleSubscribe(Subscribe event) {
+        if (getContext().getSender().isDefined()) {
+            ActorRef senderRef = getContext().getSender().get();
+            publisher.addSubscriber(senderRef, event);
+        }
+    }
+
+    private void handleUnsubscribe(Unsubscribe event) {
+        if (getContext().getSender().isDefined()) {
+            ActorRef senderRef = getContext().getSender().get();
+            publisher.removeSubscriber(senderRef, event);
+        }
+    }
+
+    private void promoteMeToPrimaryNode() {
+        publisher.setPrimaryNode(true);
+    }
+
+    private void handleDialogEvent(DialogEvent event) {
         String callId = event.getCallId();
         Long value = currentState.get(callId);
         if (value == null) {
@@ -68,36 +88,28 @@ public class CdrAggregator extends UntypedActor {
         }
         CdrEvent cdrEvent = new CdrEvent(callId, eventId, sum);
 
-        if (!isPrimaryNode) {
-            logger.info("Skipping publish from non primary node:\t" + cdrEvent.toString());
-            return;
-        }
-
-        initReporterActor();
-
-        if (reporterActor != null) {
-            logger.info("Publishing from CdrAggregator:\t" + cdrEvent.toString());
-            reporterActor.sendOneWay(cdrEvent);
-            logger.info("Published from CdrAggregator:\t" + cdrEvent.toString());
-        }
+        publisher.publish(cdrEvent);
 
     }
 
-    private void initReporterActor() {
-        if (reporterActor == null) {
+    private void initSubscriptions() {
+        if (subscriptionsInitialized) {
+            return;
+        }
+        proxyCallMonitor.sendOneWay(new Subscribe(Subscribe.Type.NORMAL, etag), getContext());
+        subscriptionsInitialized = true;
+    }
 
-            reporterActor = RemoteClient.actorFor(reporterId, reportnodeHost, reportnodePort);
-            // In Akka cloud there is a cluster aware ActorRegistry, to avoid
-            // knowing host/port
-            // ActorRef[] matching =
-            // ActorRegistry.actorsFor(Reporter.class.getName());
-            // if (matching != null && matching.length > 0) {
-            // reporterActor = matching[0];
-            // }
-        }
-        if (reporterActor == null) {
-            logger.info("No Reporter");
-        }
+    @Override
+    public void postStop() {
+        logger.info("Stopped");
+    }
+
+    // TODO can't be done from postStop
+    @SuppressWarnings("unused")
+    private void removeSubscriptions() {
+        subscriptionsInitialized = false;
+        proxyCallMonitor.sendOneWay(new Unsubscribe(Subscribe.Type.PRIMARY_ONLY), getContext());
     }
 
 }

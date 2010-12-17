@@ -1,12 +1,9 @@
 package spike;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static spike.SystemConfiguration.proxyCallMonitorId;
-import static spike.SystemConfiguration.servicenodeHost1;
-import static spike.SystemConfiguration.servicenodeHost2;
-import static spike.SystemConfiguration.servicenodePort1;
-import static spike.SystemConfiguration.servicenodePort2;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -19,8 +16,7 @@ import akka.remote.RemoteClient;
 public class EdgeProxy {
 
     private static Logger logger = LoggerFactory.getLogger(EdgeProxy.class);
-    private ActorRef servicenode1;
-    private ActorRef servicenode2;
+    private List<ActorRef> servicenodes;
     private ActorRef activeServiceNode;
 
     public static void main(String[] args) {
@@ -42,10 +38,14 @@ public class EdgeProxy {
     }
 
     private void init() {
-        // TODO use registry instead?
-        servicenode1 = RemoteClient.actorFor(proxyCallMonitorId, servicenodeHost1, servicenodePort1);
-        servicenode2 = RemoteClient.actorFor(proxyCallMonitorId, servicenodeHost2, servicenodePort2);
-        activeServiceNode = servicenode1;
+        servicenodes = new ArrayList<ActorRef>();
+        for (SystemConfiguration.RemoteLookupInfo each : SystemConfiguration.proxyCallMonitorInfos) {
+            ActorRef ref = RemoteClient.actorFor(each.id, each.host, each.port);
+            servicenodes.add(ref);
+        }
+        if (!servicenodes.isEmpty()) {
+            activeServiceNode = servicenodes.get(0);
+        }
     }
 
     public void simulateLoad(int n, long duration, TimeUnit durationUnit) {
@@ -107,7 +107,8 @@ public class EdgeProxy {
     }
 
     private void toggleServiceNode() {
-        activeServiceNode = (activeServiceNode == servicenode1 ? servicenode2 : servicenode1);
-
+        int i = servicenodes.indexOf(activeServiceNode);
+        int j = (i == servicenodes.size() - 1 ? 0 : i + 1);
+        activeServiceNode = servicenodes.get(i);
     }
 }
