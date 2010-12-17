@@ -36,11 +36,13 @@ public class ServiceNode {
     private void startActors() {
         proxyCallMonitorActor = actorOf(ProxyCallMonitor.class);
         servicenodeServer.register(SystemConfiguration.proxyCallMonitorId, proxyCallMonitorActor);
-        cdrAggregator = actorOf(CdrAggregator.class).start();
+        // TODO
+        // cdrAggregator = actorOf(CdrAggregator.class).start();
     }
 
     public void stop() {
-        cdrAggregator.stop();
+        // TODO
+        // cdrAggregator.stop();
         proxyCallMonitorActor.stop();
         servicenodeServer.shutdown();
     }

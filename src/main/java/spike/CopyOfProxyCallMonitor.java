@@ -1,7 +1,6 @@
 package spike;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,16 +14,19 @@ import akka.actor.UntypedActor;
 
 import com.eaio.uuid.UUID;
 
-public class ProxyCallMonitor extends UntypedActor {
+public class CopyOfProxyCallMonitor extends UntypedActor {
 
-    private static Logger logger = LoggerFactory.getLogger(ProxyCallMonitor.class);
+    private static Logger logger = LoggerFactory.getLogger(CopyOfProxyCallMonitor.class);
 
     private final Map<String, List<DialogEvent>> dialogEvents = new HashMap<String, List<DialogEvent>>();
     private ActorRef cdrAggregator;
-    private ActorRef buddy;
+    private final Map<Subscribe.Type, List<ActorRef>> subscribers = new HashMap<Subscribe.Type, List<ActorRef>>();
     boolean isPrimaryNode;
 
-    public ProxyCallMonitor() {
+    public CopyOfProxyCallMonitor() {
+        for (Subscribe.Type each : Subscribe.Type.values()) {
+            subscribers.put(each, new ArrayList<ActorRef>());
+        }
     }
 
     @Override
@@ -36,9 +38,30 @@ public class ProxyCallMonitor extends UntypedActor {
                 getContext().replyUnsafe("100 Trying");
             } else if (message instanceof DialogEvent) {
                 handleDialogEvent(message);
+            } else if (message instanceof Subscribe) {
+                handleSubscribe(message);
+            } else if (message instanceof Unsubscribe) {
+                handleSubscribe(message);
             }
+
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
+        }
+    }
+
+    private void handleSubscribe(Object message) {
+        Subscribe event = (Subscribe) message;
+        if (getContext().getSender().isDefined()) {
+            ActorRef senderRef = getContext().getSender().get();
+            subscribers.get(event.getType()).add(senderRef);
+        }
+    }
+
+    private void handleUnsubscribe(Object message) {
+        Unsubscribe event = (Unsubscribe) message;
+        if (getContext().getSender().isDefined()) {
+            ActorRef senderRef = getContext().getSender().get();
+            subscribers.get(event.getType()).remove(senderRef);
         }
     }
 
@@ -98,21 +121,22 @@ public class ProxyCallMonitor extends UntypedActor {
 
     private void publishDialogEvent(DialogEvent event) {
         initBuddy();
-        if (isPrimaryNode && buddy != null) {
-            try {
-                buddy.sendOneWay(event);
-                logger.info("Published from ProxyCallMonitor to Buddy:\t" + event.toString());
-            } catch (RuntimeException e) {
-                logger.info("Failed to publish from ProxyCallMonitor to Buddy:\t" + event.toString());
-            }
+        if (isPrimaryNode) {
+            publish(event, subscribers.get(Subscribe.Type.BUDDY));
+            publish(event, subscribers.get(Subscribe.Type.PRIMARY_ONLY));
         }
 
-        initCdrAggregator();
+        publish(event, subscribers.get(Subscribe.Type.NORMAL));
+    }
 
-        if (cdrAggregator != null) {
-            logger.info("Publishing from ProxyCallMonitor to CdrAggregator:\t" + event.toString());
-            cdrAggregator.sendOneWay(event);
-            logger.info("Published from ProxyCallMonitor to CdrAggregator:\t" + event.toString());
+    private void publish(DialogEvent event, List<ActorRef> toSubscribers) {
+        for (ActorRef subscriber : toSubscribers) {
+            try {
+                subscriber.sendOneWay(event);
+                logger.info("Published from ProxyCallMonitor:\t" + event.toString());
+            } catch (RuntimeException e) {
+                logger.info("Failed to publish from ProxyCallMonitor:\t" + event.toString());
+            }
         }
     }
 
@@ -121,10 +145,10 @@ public class ProxyCallMonitor extends UntypedActor {
             // TODO how to do this? actor id and registered id?
             // ActorRef[] matching =
             // ActorRegistry.actorsFor(SystemConfiguration.cdrAggregatorId);
-            ActorRef[] matching = ActorRegistry.actorsFor(ProxyCallMonitor.class.getName());
+            ActorRef[] matching = ActorRegistry.actorsFor(CopyOfProxyCallMonitor.class.getName());
             if (matching != null && matching.length > 0) {
                 UUID myUuid = getContext().getUuid();
-                for (ActorRef each : Arrays.asList(matching)) {
+                for (ActorRef each : matching) {
                     if (!each.getUuid().equals(myUuid)) {
                         buddy = each;
                         break;
@@ -137,19 +161,13 @@ public class ProxyCallMonitor extends UntypedActor {
         }
     }
 
-    private void initCdrAggregator() {
-        if (cdrAggregator == null) {
-            // TODO
-            cdrAggregator = actorOf(CdrAggregator.class).start();
-            // ActorRef[] matching =
-            // ActorRegistry.actorsFor(CdrAggregator.class);
-            // if (matching != null && matching.length > 0) {
-            // cdrAggregator = matching[0];
-            // }
-        }
-        if (cdrAggregator == null) {
-            logger.info("No CdrAggregator");
-        }
+    @Override
+    public void postStart() {
+    }
+
+    @Override
+    public void preStop() {
+
     }
 
     @Override

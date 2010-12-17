@@ -8,6 +8,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -19,6 +20,7 @@ import org.junit.Test;
  * </pre>
  * 
  */
+@Ignore
 public class SeparateJvmFailover2Test extends SeparateJvmTest {
 
     ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
