@@ -3,11 +3,8 @@ package spike;
 import static spike.TestHelper.compareFiles;
 
 import java.io.File;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.After;
 import org.junit.Test;
 
 /**
@@ -21,27 +18,9 @@ import org.junit.Test;
  */
 public class SingleJvmFailover2Test extends SingleJvmTest {
 
-    ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-
-    @Override
-    @After
-    public void tearDown() throws Exception {
-        executor.shutdownNow();
-        super.tearDown();
-    }
-
     @Test
     public void testNormal() throws Exception {
-        Runnable killServiceNode1 = new Runnable() {
-            @Override
-            public void run() {
-                if (executor.isShutdown()) {
-                    return;
-                }
-                serviceNode1.stop();
-            }
-        };
-        executor.schedule(killServiceNode1, 2, TimeUnit.SECONDS);
+        killServiceNode1After(2, TimeUnit.SECONDS);
 
         EdgeProxy edgeProxy = new EdgeProxy();
         edgeProxy.simulateLoad(1000, 5, TimeUnit.SECONDS);

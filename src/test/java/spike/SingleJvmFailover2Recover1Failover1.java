@@ -1,14 +1,11 @@
 package spike;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static spike.TestHelper.compareFiles;
 
 import java.io.File;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
-import org.junit.After;
 import org.junit.Test;
 
 /**
@@ -22,47 +19,11 @@ import org.junit.Test;
  */
 public class SingleJvmFailover2Recover1Failover1 extends SingleJvmTest {
 
-    ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-
-    @After
-    public void shutDownExecutor() {
-        executor.shutdownNow();
-    }
-
     @Test
     public void testNormal() throws Exception {
-
-        Runnable killServiceNode1 = new Runnable() {
-            @Override
-            public void run() {
-                if (executor.isShutdown()) {
-                    return;
-                }
-                serviceNode1.stop();
-            }
-        };
-        Runnable startServiceNode1 = new Runnable() {
-            @Override
-            public void run() {
-                if (executor.isShutdown()) {
-                    return;
-                }
-                serviceNode1.start();
-            }
-        };
-        Runnable killServiceNode2 = new Runnable() {
-            @Override
-            public void run() {
-                if (executor.isShutdown()) {
-                    return;
-                }
-                serviceNode2.stop();
-            }
-        };
-
-        executor.schedule(killServiceNode1, 500, TimeUnit.MILLISECONDS);
-        executor.schedule(startServiceNode1, 1000, TimeUnit.MILLISECONDS);
-        executor.schedule(killServiceNode2, 1500, TimeUnit.MILLISECONDS);
+    	killServiceNode1After(500, MILLISECONDS);
+    	startServiceNode1After(1000, MILLISECONDS);
+    	killServiceNode2After(1500, MILLISECONDS);
 
         EdgeProxy edgeProxy = new EdgeProxy();
         edgeProxy.simulateLoad(1000, 5, SECONDS);
