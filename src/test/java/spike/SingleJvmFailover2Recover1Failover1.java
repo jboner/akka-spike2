@@ -25,24 +25,12 @@ import org.junit.Test;
  * </pre>
  * 
  */
-public class SingleJvmFailover2Recover1Failover1 {
+public class SingleJvmFailover2Recover1Failover1 extends SingleJvmTest {
 
     ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-    private ServiceNode serviceNode1;
-    private ServiceNode serviceNode2;
-
-    @Before
-    public void setUp() throws Exception {
-        ReportNode reportNode = new ReportNode();
-        reportNode.start();
-        serviceNode1 = new ServiceNode();
-        serviceNode1.start(servicenodeHost1, servicenodePort1);
-        serviceNode2 = new ServiceNode();
-        serviceNode2.start(servicenodeHost2, servicenodePort2);
-    }
 
     @After
-    public void tearDown() {
+    public void shutDownExecutor() {
         executor.shutdownNow();
     }
 
