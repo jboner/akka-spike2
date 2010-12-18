@@ -31,7 +31,11 @@ public class Publisher {
     }
 
     public void addSubscriber(ActorRef subscriber, Subscribe subscribeEvent) {
-        subscribers.get(subscribeEvent.getType()).add(subscriber);
+        List<ActorRef> subscribersForType = subscribers.get(subscribeEvent.getType());
+        if (!subscribersForType.contains(subscriber)) {
+            logger.info("Added subscriber {} {}", subscriber.getId(), subscribeEvent.getType());
+            subscribersForType.add(subscriber);
+        }
     }
 
     public void removeSubscriber(ActorRef subscriber, Unsubscribe unsubscribeEvent) {
@@ -51,9 +55,9 @@ public class Publisher {
         for (ActorRef subscriber : toSubscribers) {
             try {
                 subscriber.sendOneWay(event);
-                logger.info("Published:\t {}", event);
+                logger.info("Published: {}", event);
             } catch (RuntimeException e) {
-                logger.info("Failed to publish:\t {}", event);
+                logger.info("Failed to publish: {}", event);
             }
         }
     }

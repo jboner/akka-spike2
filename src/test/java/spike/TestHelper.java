@@ -10,6 +10,8 @@ import junit.framework.Assert;
 public class TestHelper {
 
     public static void compareFiles(File expected, File result) throws Exception {
+        Assert.assertTrue("Missing reference file: " + expected, expected.exists());
+        Assert.assertTrue("Missing result file: " + result, result.exists());
         BufferedReader expectedReader = new BufferedReader(
                 new InputStreamReader(new FileInputStream(expected), "UTF-8"));
         BufferedReader resultReader = new BufferedReader(new InputStreamReader(new FileInputStream(result), "UTF-8"));

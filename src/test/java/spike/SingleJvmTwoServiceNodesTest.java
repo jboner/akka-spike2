@@ -26,7 +26,7 @@ public class SingleJvmTwoServiceNodesTest extends SingleJvmTest {
 
         sleep(1000);
 
-        compareFiles(new File("./src/main/resources/cdr-reference-1000.txt"), new File("./logs/cdr.txt"));
+        compareFiles(new File("./src/main/resources/cdr-reference-1000.txt"), resultFile());
     }
 
 }

@@ -2,6 +2,7 @@ package spike;
 
 import static spike.TestHelper.startJVM;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,6 +28,11 @@ public abstract class SeparateJvmTest {
         }
         reportProcess = startJVM(ReportNode.class, null);
         processes.add(reportProcess);
+
+        File resultFile = resultFile();
+        if (resultFile.exists()) {
+            resultFile.delete();
+        }
     }
 
     protected boolean isServiceNode1ToBeStarted() {
@@ -47,4 +53,7 @@ public abstract class SeparateJvmTest {
         }
     }
 
+    protected File resultFile() {
+        return resultFile();
+    }
 }

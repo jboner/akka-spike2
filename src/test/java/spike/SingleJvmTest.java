@@ -1,5 +1,8 @@
 package spike;
 
+import static spike.TestHelper.sleep;
+
+import java.io.File;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -29,7 +32,14 @@ public abstract class SingleJvmTest {
         reportNode = new ReportNode();
         reportNode.start();
 
-        TestHelper.sleep(500);
+        // TODO we should not need this sleep, right now it is needed for all
+        // subscriptions to be initialized
+        sleep(7000);
+
+        File resultFile = resultFile();
+        if (resultFile.exists()) {
+            resultFile.delete();
+        }
     }
 
     protected boolean isServiceNode1ToBeStarted() {
@@ -112,6 +122,10 @@ public abstract class SingleJvmTest {
             }
         };
         executor.schedule(killServiceNode2, delay, timeUnit);
+    }
+
+    protected File resultFile() {
+        return new File("./logs/cdr.txt");
     }
 
 }

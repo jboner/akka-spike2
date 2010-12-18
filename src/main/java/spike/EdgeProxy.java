@@ -66,7 +66,7 @@ public class EdgeProxy {
         int inc = i % 10;
         String callId = "d" + (i % 3);
         SipReq req = new SipReq(callId, String.valueOf(i), inc, done);
-        logger.info("Sending from EdgeProxy: " + req);
+        logger.info("Sending: {}", req);
         // TODO how to detect success/fail, know if service is available?
         // try {
         // servicenode.sendOneWay(req);
@@ -79,7 +79,7 @@ public class EdgeProxy {
             Future<?> future = activeServiceNode.sendRequestReplyFuture(req);
             future.await();
             if (future.isCompleted()) {
-                logger.info("Reply from from EdgeProxy: " + req);
+                logger.info("Reply: {}", req);
             }
             // TODO what is diff between isExpired and TimeoutException?
             // if (future.isExpired()) {
@@ -88,7 +88,7 @@ public class EdgeProxy {
             // produce(i, retry + 1);
             // }
         } catch (RuntimeException e) {
-            logger.info("Timeout from from EdgeProxy: " + req);
+            logger.info("Timeout: {}", req);
             toggleServiceNode();
             produce(i, retry + 1, sleepMillis);
         }

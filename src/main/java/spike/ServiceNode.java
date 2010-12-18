@@ -14,7 +14,7 @@ public class ServiceNode {
     private RemoteServer servicenodeServer;
     private ActorRef proxyCallMonitor;
     private ActorRef cdrAggregator;
-    private final HeartbeatTimer heartbeatTimer = new HeartbeatTimer(10, SECONDS);
+    private final HeartbeatTimer heartbeatTimer = new HeartbeatTimer(1, SECONDS);
 
     public static void main(String[] args) {
         int i = 0;

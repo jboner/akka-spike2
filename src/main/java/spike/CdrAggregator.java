@@ -11,24 +11,25 @@ import akka.actor.UntypedActor;
 
 public class CdrAggregator extends UntypedActor {
 
-    private static final Logger logger = LoggerFactory.getLogger(CdrAggregator.class);
-
+    private final Logger logger;
     private final Map<String, Long> currentState = new HashMap<String, Long>();
     private final ActorRef proxyCallMonitor;
     private String etag;
-    private final Publisher publisher = new Publisher(logger);
+    private final Publisher publisher;
     private boolean subscriptionsInitialized;
 
     public CdrAggregator(String id, ActorRef proxyCallMonitor) {
+        logger = LoggerFactory.getLogger(id);
         getContext().setId(id);
         this.proxyCallMonitor = proxyCallMonitor;
+        publisher = new Publisher(logger);
     }
 
     @Override
     public void onReceive(Object message) throws Exception {
         try {
             if (message instanceof HAState) {
-                promoteMeToPrimaryNode();
+                handleHAState((HAState) message);
             } else if (message instanceof DialogEvent) {
                 handleDialogEvent((DialogEvent) message);
             } else if (message instanceof Subscribe) {
@@ -61,8 +62,8 @@ public class CdrAggregator extends UntypedActor {
         }
     }
 
-    private void promoteMeToPrimaryNode() {
-        publisher.setPrimaryNode(true);
+    private void handleHAState(HAState event) {
+        publisher.setPrimaryNode(event.isPrimaryNode());
     }
 
     private void handleDialogEvent(DialogEvent event) {
@@ -74,7 +75,7 @@ public class CdrAggregator extends UntypedActor {
         value += event.getInc();
         currentState.put(callId, value);
 
-        logger.info(event.toString());
+        logger.info("Handle: {}", event);
 
         if (event.isDone()) {
             publishCdrEvent(callId, event.getEventId());
@@ -99,6 +100,11 @@ public class CdrAggregator extends UntypedActor {
         }
         proxyCallMonitor.sendOneWay(new Subscribe(Subscribe.Type.NORMAL, etag), getContext());
         subscriptionsInitialized = true;
+    }
+
+    @Override
+    public void preStart() {
+        logger.info("Started");
     }
 
     @Override

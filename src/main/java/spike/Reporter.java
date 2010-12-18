@@ -17,12 +17,13 @@ import akka.remote.RemoteClient;
 
 class Reporter extends UntypedActor {
 
-    private static Logger logger = LoggerFactory.getLogger(Reporter.class);
+    private final Logger logger;
     private boolean firstTime = true;
     private String etag;
     private boolean subscriptionsInitialized;
 
     public Reporter(String id) {
+        logger = LoggerFactory.getLogger(id);
         getContext().setId(id);
     }
 
@@ -44,7 +45,7 @@ class Reporter extends UntypedActor {
     }
 
     private void handleCdrEvent(CdrEvent cdrEvent) {
-        logger.info("Recieved in Reporter: " + cdrEvent.toString() + " first: " + firstTime);
+        logger.info("Handle: {}", cdrEvent.toString());
         PrintWriter writer = null;
         try {
             boolean append = !firstTime;
@@ -82,6 +83,11 @@ class Reporter extends UntypedActor {
 
     private void subscribe(ActorRef publisher) {
         publisher.sendOneWay(new Subscribe(Subscribe.Type.PRIMARY_ONLY, etag), getContext());
+    }
+
+    @Override
+    public void preStart() {
+        logger.info("Started");
     }
 
     @Override

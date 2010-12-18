@@ -35,6 +35,6 @@ public class SingleJvmLateStartOfNode2Failover2Test extends SingleJvmTest {
 
         sleep(2000);
 
-        compareFiles(new File("./src/main/resources/cdr-reference-1000.txt"), new File("./logs/cdr.txt"));
+        compareFiles(new File("./src/main/resources/cdr-reference-1000.txt"), resultFile());
     }
 }

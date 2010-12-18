@@ -12,7 +12,7 @@ public class ReportNode {
     private final SystemConfiguration.RemoteLookupInfo lookupInfo = SystemConfiguration.reporterInfo;
     private RemoteServer reportnode;
     private ActorRef reporter;
-    private final HeartbeatTimer heartbeatTimer = new HeartbeatTimer(10, SECONDS);
+    private final HeartbeatTimer heartbeatTimer = new HeartbeatTimer(1, SECONDS);
 
     public static void main(String[] args) {
         ReportNode manager = new ReportNode();

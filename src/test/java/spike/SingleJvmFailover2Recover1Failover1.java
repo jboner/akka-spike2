@@ -31,6 +31,6 @@ public class SingleJvmFailover2Recover1Failover1 extends SingleJvmTest {
 
         sleep(2000);
 
-        compareFiles(new File("./src/main/resources/cdr-reference-1000.txt"), new File("./logs/cdr.txt"));
+        compareFiles(new File("./src/main/resources/cdr-reference-1000.txt"), resultFile());
     }
 }

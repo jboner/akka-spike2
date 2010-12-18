@@ -15,16 +15,17 @@ import akka.remote.RemoteClient;
 
 public class ProxyCallMonitor extends UntypedActor {
 
-    private static final Logger logger = LoggerFactory.getLogger(ProxyCallMonitor.class);
-
+    private final Logger logger;
     private final Map<String, List<DialogEvent>> dialogEvents = new HashMap<String, List<DialogEvent>>();
-    private final Publisher publisher = new Publisher(logger);
+    private final Publisher publisher;
     private boolean isPrimaryNode;
     private String etag;
     private boolean subscriptionsInitialized;
 
     public ProxyCallMonitor(String id) {
+        logger = LoggerFactory.getLogger(id);
         getContext().setId(id);
+        publisher = new Publisher(logger);
     }
 
     @Override
@@ -53,7 +54,6 @@ public class ProxyCallMonitor extends UntypedActor {
     }
 
     private void handleSubscribe(Subscribe event) {
-
         if (getContext().getSender().isDefined()) {
             ActorRef senderRef = getContext().getSender().get();
             publisher.addSubscriber(senderRef, event);
@@ -90,10 +90,10 @@ public class ProxyCallMonitor extends UntypedActor {
     }
 
     private void promoteMeToPrimaryNode() {
-        if (!isPrimaryNode) {
-            publisher.setPrimaryNode(true);
-        }
         isPrimaryNode = true;
+        publisher.setPrimaryNode(isPrimaryNode);
+        HAState haState = new HAState(isPrimaryNode);
+        publisher.publish(haState);
     }
 
     private void handleDialogEvent(DialogEvent event) {
@@ -106,7 +106,7 @@ public class ProxyCallMonitor extends UntypedActor {
 
         events.add(event);
 
-        logger.info("Handle DialogEvent: " + event.toString());
+        logger.info("Handle: {}", event);
 
         publisher.publish(event);
         if (event.isDone()) {
@@ -143,7 +143,13 @@ public class ProxyCallMonitor extends UntypedActor {
     }
 
     private void subscribe(ActorRef buddy) {
+        // TODO probably we should reduce timeout for this
         buddy.sendOneWay(new Subscribe(Subscribe.Type.BUDDY, etag), getContext());
+    }
+
+    @Override
+    public void preStart() {
+        logger.info("Started");
     }
 
     @Override
