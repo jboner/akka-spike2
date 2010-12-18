@@ -90,10 +90,12 @@ public class ProxyCallMonitor extends UntypedActor {
     }
 
     private void promoteMeToPrimaryNode() {
-        isPrimaryNode = true;
-        publisher.setPrimaryNode(isPrimaryNode);
-        HAState haState = new HAState(isPrimaryNode);
-        publisher.publish(haState);
+        if (!isPrimaryNode) {
+            isPrimaryNode = true;
+            publisher.setPrimaryNode(isPrimaryNode);
+            HAState haState = new HAState(isPrimaryNode);
+            publisher.publish(haState);
+        }
     }
 
     private void handleDialogEvent(DialogEvent event) {

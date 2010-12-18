@@ -27,7 +27,7 @@ public class HeartbeatTimer extends Publisher {
                 publish(heartbeat);
             }
         };
-        scheduledFuture = executor.scheduleWithFixedDelay(task, 0, interval, unit);
+        scheduledFuture = executor.scheduleWithFixedDelay(task, interval, interval, unit);
     }
 
     public void stop() {

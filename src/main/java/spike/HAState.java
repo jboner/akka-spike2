@@ -16,4 +16,9 @@ public class HAState implements Serializable {
         return isPrimaryNode;
     }
 
+    @Override
+    public String toString() {
+        return "HAState primary: " + isPrimaryNode;
+    }
+
 }

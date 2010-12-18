@@ -14,11 +14,15 @@ import spike.SystemConfiguration.RemoteLookupInfo;
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 import akka.remote.RemoteClient;
+import akka.remote.RemoteClientConnected;
+import akka.remote.RemoteClientDisconnected;
+import akka.remote.RemoteClientError;
+import akka.remote.RemoteClientShutdown;
+import akka.remote.RemoteClientStarted;
 
 class Reporter extends UntypedActor {
 
     private final Logger logger;
-    private boolean firstTime = true;
     private String etag;
     private boolean subscriptionsInitialized;
 
@@ -34,6 +38,27 @@ class Reporter extends UntypedActor {
                 handleCdrEvent((CdrEvent) message);
             } else if (message instanceof Heartbeat) {
                 handleHeartbeat((Heartbeat) message);
+            } else if (message instanceof RemoteClientError) {
+                RemoteClientError event = (RemoteClientError) message;
+                Throwable cause = event.getCause();
+                RemoteClient client = event.getClient();
+                logger.error("RemoteClientError");
+            } else if (message instanceof RemoteClientConnected) {
+                RemoteClientConnected event = (RemoteClientConnected) message;
+                RemoteClient client = event.getClient();
+                logger.info("RemoteClientConnected");
+            } else if (message instanceof RemoteClientDisconnected) {
+                RemoteClientDisconnected event = (RemoteClientDisconnected) message;
+                RemoteClient client = event.getClient();
+                logger.info("RemoteClientDisconnected");
+            } else if (message instanceof RemoteClientStarted) {
+                RemoteClientStarted event = (RemoteClientStarted) message;
+                RemoteClient client = event.getClient();
+                logger.error("RemoteClientStarted");
+            } else if (message instanceof RemoteClientShutdown) {
+                RemoteClientShutdown event = (RemoteClientShutdown) message;
+                RemoteClient client = event.getClient();
+                logger.error("RemoteClientShutdown");
             }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -48,11 +73,9 @@ class Reporter extends UntypedActor {
         logger.info("Handle: {}", cdrEvent.toString());
         PrintWriter writer = null;
         try {
-            boolean append = !firstTime;
             writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream("./logs/cdr"
-                    + ".txt", append), "UTF-8")));
+                    + ".txt", true), "UTF-8")));
             writer.println(cdrEvent.toString());
-            firstTime = false;
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         } finally {
@@ -66,9 +89,16 @@ class Reporter extends UntypedActor {
         List<ActorRef> result = new ArrayList<ActorRef>();
         for (RemoteLookupInfo each : SystemConfiguration.cdrAggregatorInfos) {
             ActorRef publisher = RemoteClient.actorFor(each.id, each.host, each.port);
+            RemoteClient.clientFor(each.id, each.port).addListener(getContext());
             result.add(publisher);
         }
         return result;
+    }
+
+    private void addRemoteClientListeners() {
+        for (RemoteLookupInfo each : SystemConfiguration.cdrAggregatorInfos) {
+            RemoteClient.clientFor(each.id, each.port).addListener(getContext());
+        }
     }
 
     private void initSubscriptions() {

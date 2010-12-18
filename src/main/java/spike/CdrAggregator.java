@@ -28,9 +28,7 @@ public class CdrAggregator extends UntypedActor {
     @Override
     public void onReceive(Object message) throws Exception {
         try {
-            if (message instanceof HAState) {
-                handleHAState((HAState) message);
-            } else if (message instanceof DialogEvent) {
+            if (message instanceof DialogEvent) {
                 handleDialogEvent((DialogEvent) message);
             } else if (message instanceof Subscribe) {
                 handleSubscribe((Subscribe) message);
@@ -38,6 +36,8 @@ public class CdrAggregator extends UntypedActor {
                 handleUnsubscribe((Unsubscribe) message);
             } else if (message instanceof Heartbeat) {
                 handleHeartbeat((Heartbeat) message);
+            } else if (message instanceof HAState) {
+                handleHAState((HAState) message);
             }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -63,6 +63,7 @@ public class CdrAggregator extends UntypedActor {
     }
 
     private void handleHAState(HAState event) {
+        logger.info("Handle: {}", event);
         publisher.setPrimaryNode(event.isPrimaryNode());
     }
 
@@ -78,6 +79,10 @@ public class CdrAggregator extends UntypedActor {
         logger.info("Handle: {}", event);
 
         if (event.isDone()) {
+            if (getContext().getId().endsWith("-2")) {
+                // TODO these never reach Reporter after failover
+                logger.info("Should publish from secondary: {}", event);
+            }
             publishCdrEvent(callId, event.getEventId());
             currentState.remove(callId);
         }

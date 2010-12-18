@@ -75,7 +75,7 @@ public class EdgeProxy {
         // }
 
         try {
-            // servicenode.setTimeout(2000);
+            activeServiceNode.setTimeout(15000);
             Future<?> future = activeServiceNode.sendRequestReplyFuture(req);
             future.await();
             if (future.isCompleted()) {
