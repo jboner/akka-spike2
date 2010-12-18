@@ -8,11 +8,16 @@
 <!--    http://www.qos.ch/shop/products/professionalSupport         -->
 <!--                                                                -->
 <configuration>
+
+  <evaluator name="DISPLAY_EX_EVAL">
+    <expression>throwable instanceof java.nio.channels.NotYetConnectedException</expression>
+  </evaluator>
+  
   <!-- Errors were reported during translation. -->
   <!-- Could not find transformer for org.apache.log4j.SimpleLayout -->
   <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
     <encoder>
-      <pattern>[%4p] [%d{ISO8601}] [%t] %c{1}: %m%n</pattern>
+      <pattern>[%4p] [%d{ISO8601}] [%t] %c{1}: %m%n%ex{full, DISPLAY_EX_EVAL}</pattern>
     </encoder>
   </appender>
   <appender name="R" class="ch.qos.logback.core.rolling.RollingFileAppender">
