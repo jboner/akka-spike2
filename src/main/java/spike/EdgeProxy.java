@@ -109,6 +109,6 @@ public class EdgeProxy {
     private void toggleServiceNode() {
         int i = servicenodes.indexOf(activeServiceNode);
         int j = (i == servicenodes.size() - 1 ? 0 : i + 1);
-        activeServiceNode = servicenodes.get(i);
+        activeServiceNode = servicenodes.get(j);
     }
 }

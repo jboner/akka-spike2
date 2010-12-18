@@ -19,7 +19,8 @@ public class CdrAggregator extends UntypedActor {
     private final Publisher publisher = new Publisher(logger);
     private boolean subscriptionsInitialized;
 
-    public CdrAggregator(ActorRef proxyCallMonitor) {
+    public CdrAggregator(String id, ActorRef proxyCallMonitor) {
+        getContext().setId(id);
         this.proxyCallMonitor = proxyCallMonitor;
     }
 

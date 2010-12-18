@@ -2,7 +2,9 @@ package spike;
 
 import static akka.actor.UntypedActor.actorOf;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import akka.actor.Actor;
 import akka.actor.ActorRef;
+import akka.actor.UntypedActorFactory;
 import akka.remote.RemoteServer;
 
 public class ReportNode {
@@ -29,7 +31,12 @@ public class ReportNode {
     }
 
     private void startActors() {
-        reporter = actorOf(Reporter.class);
+        reporter = actorOf(new UntypedActorFactory() {
+            @Override
+            public Actor create() {
+                return new Reporter(lookupInfo.id);
+            }
+        });
         reportnode.register(lookupInfo.id, reporter);
     }
 

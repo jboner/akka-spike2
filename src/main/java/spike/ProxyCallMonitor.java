@@ -13,8 +13,6 @@ import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
 import akka.remote.RemoteClient;
 
-import com.eaio.uuid.UUID;
-
 public class ProxyCallMonitor extends UntypedActor {
 
     private static final Logger logger = LoggerFactory.getLogger(ProxyCallMonitor.class);
@@ -25,7 +23,8 @@ public class ProxyCallMonitor extends UntypedActor {
     private String etag;
     private boolean subscriptionsInitialized;
 
-    public ProxyCallMonitor() {
+    public ProxyCallMonitor(String id) {
+        getContext().setId(id);
     }
 
     @Override
@@ -54,6 +53,7 @@ public class ProxyCallMonitor extends UntypedActor {
     }
 
     private void handleSubscribe(Subscribe event) {
+
         if (getContext().getSender().isDefined()) {
             ActorRef senderRef = getContext().getSender().get();
             publisher.addSubscriber(senderRef, event);
@@ -122,10 +122,10 @@ public class ProxyCallMonitor extends UntypedActor {
         List<ActorRef> result = new ArrayList<ActorRef>();
         // In Akka cloud there is a cluster aware ActorRegistry, to avoid
         // knowing host/port
-        UUID myUuid = getContext().getUuid();
+        String myId = getContext().getId();
         for (RemoteLookupInfo each : SystemConfiguration.proxyCallMonitorInfos) {
             ActorRef buddy = RemoteClient.actorFor(each.id, each.host, each.port);
-            if (!buddy.getUuid().equals(myUuid)) {
+            if (!buddy.getId().equals(myId)) {
                 result.add(buddy);
             }
         }
@@ -133,11 +133,6 @@ public class ProxyCallMonitor extends UntypedActor {
     }
 
     private void initSubscriptions() {
-        // TODO PROBLEM with lookup, uuid of RemoteActorRef is not same as
-        // myUuid
-        if (true) {
-            return;
-        }
         if (subscriptionsInitialized) {
             return;
         }

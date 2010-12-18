@@ -1,9 +1,5 @@
 package spike;
 
-import static spike.SystemConfiguration.cdrAggregator1Info;
-import static spike.SystemConfiguration.proxyCallMonitor1Info;
-import static spike.SystemConfiguration.proxyCallMonitor2Info;
-
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -22,16 +18,18 @@ public abstract class SingleJvmTest {
     @Before
     public void setUp() throws Exception {
         if (isServiceNode1ToBeStarted()) {
-            serviceNode1 = new ServiceNode(proxyCallMonitor1Info, cdrAggregator1Info);
+            serviceNode1 = new ServiceNode(0);
             serviceNode1.start();
         }
         if (isServiceNode2ToBeStarted()) {
-            serviceNode2 = new ServiceNode(proxyCallMonitor2Info, SystemConfiguration.cdrAggregator2Info);
+            serviceNode2 = new ServiceNode(1);
             serviceNode2.start();
         }
         // TODO test starting ReporterNode before ServiceNode
         reportNode = new ReportNode();
         reportNode.start();
+
+        TestHelper.sleep(500);
     }
 
     protected boolean isServiceNode1ToBeStarted() {

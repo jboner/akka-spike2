@@ -22,7 +22,8 @@ class Reporter extends UntypedActor {
     private String etag;
     private boolean subscriptionsInitialized;
 
-    Reporter() {
+    public Reporter(String id) {
+        getContext().setId(id);
     }
 
     @Override

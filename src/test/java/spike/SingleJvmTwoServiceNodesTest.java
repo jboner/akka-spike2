@@ -2,6 +2,7 @@ package spike;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static spike.TestHelper.compareFiles;
+import static spike.TestHelper.sleep;
 
 import java.io.File;
 
@@ -23,7 +24,7 @@ public class SingleJvmTwoServiceNodesTest extends SingleJvmTest {
         EdgeProxy edgeProxy = new EdgeProxy();
         edgeProxy.simulateLoad(1000, 5, SECONDS);
 
-        Thread.sleep(1000);
+        sleep(1000);
 
         compareFiles(new File("./src/main/resources/cdr-reference-1000.txt"), new File("./logs/cdr.txt"));
     }

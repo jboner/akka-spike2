@@ -2,7 +2,6 @@ package spike;
 
 import static akka.actor.UntypedActor.actorOf;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import spike.SystemConfiguration.RemoteLookupInfo;
 import akka.actor.Actor;
 import akka.actor.ActorRef;
 import akka.actor.UntypedActorFactory;
@@ -22,20 +21,17 @@ public class ServiceNode {
         if (args.length > 0) {
             i = Integer.valueOf(args[0]);
         }
-        RemoteLookupInfo proxyCallMonitorInfo = SystemConfiguration.proxyCallMonitorInfos[i];
-        RemoteLookupInfo cdrAggregatorInfo = SystemConfiguration.cdrAggregatorInfos[i];
-        ServiceNode servicenode = new ServiceNode(proxyCallMonitorInfo, cdrAggregatorInfo);
+        ServiceNode servicenode = new ServiceNode(i);
         servicenode.start();
     }
 
     public ServiceNode() {
-        this.proxyCallMonitorInfo = SystemConfiguration.proxyCallMonitor1Info;
-        this.cdrAggregatorInfo = SystemConfiguration.cdrAggregator1Info;
+        this(0);
     }
 
-    public ServiceNode(RemoteLookupInfo proxyCallMonitorInfo, RemoteLookupInfo cdrAggregatorInfo) {
-        this.proxyCallMonitorInfo = proxyCallMonitorInfo;
-        this.cdrAggregatorInfo = cdrAggregatorInfo;
+    public ServiceNode(int nodeIndex) {
+        this.proxyCallMonitorInfo = SystemConfiguration.proxyCallMonitorInfos[nodeIndex];
+        this.cdrAggregatorInfo = SystemConfiguration.cdrAggregatorInfos[nodeIndex];
     }
 
     public void start() {
@@ -49,11 +45,16 @@ public class ServiceNode {
     }
 
     private void startActors() {
-        proxyCallMonitor = actorOf(ProxyCallMonitor.class);
+        proxyCallMonitor = actorOf(new UntypedActorFactory() {
+            @Override
+            public Actor create() {
+                return new ProxyCallMonitor(proxyCallMonitorInfo.id);
+            }
+        });
         cdrAggregator = actorOf(new UntypedActorFactory() {
             @Override
             public Actor create() {
-                return new CdrAggregator(proxyCallMonitor);
+                return new CdrAggregator(cdrAggregatorInfo.id, proxyCallMonitor);
             }
         });
         servicenodeServer.register(proxyCallMonitorInfo.id, proxyCallMonitor);
