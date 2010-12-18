@@ -54,7 +54,7 @@ public class ReportNode {
     }
 
     private void startHeartbeatTimer() {
-        heartbeatTimer.addSubscriber(reporter, new Subscribe(Subscribe.Type.NORMAL, null));
+        heartbeatTimer.addSubscriber(reporter, new Subscribe(Subscribe.Type.NORMAL, 0));
         heartbeatTimer.start();
     }
 

@@ -54,6 +54,6 @@ public abstract class SeparateJvmTest {
     }
 
     protected File resultFile() {
-        return resultFile();
+        return new File("./logs/cdr.txt");
     }
 }

@@ -7,11 +7,13 @@ public class CdrEvent implements Serializable {
     private final String callId;
     private final long sum;
     private final String eventId;
+    private final long etag;
 
-    public CdrEvent(String callId, String eventId, long sum) {
+    public CdrEvent(String callId, String eventId, long sum, long etag) {
         this.callId = callId;
         this.eventId = eventId;
         this.sum = sum;
+        this.etag = etag;
     }
 
     public String getCallId() {
@@ -24,6 +26,10 @@ public class CdrEvent implements Serializable {
 
     public String getEventId() {
         return eventId;
+    }
+
+    public long getEtag() {
+        return etag;
     }
 
     @Override

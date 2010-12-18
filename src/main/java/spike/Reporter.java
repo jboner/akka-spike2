@@ -23,7 +23,7 @@ import akka.remote.RemoteClientStarted;
 class Reporter extends UntypedActor {
 
     private final Logger logger;
-    private String etag;
+    private long etag;
     private boolean subscriptionsInitialized;
 
     public Reporter(String id) {
@@ -36,6 +36,8 @@ class Reporter extends UntypedActor {
         try {
             if (message instanceof CdrEvent) {
                 handleCdrEvent((CdrEvent) message);
+            } else if (message instanceof CdrSnapshot) {
+                handleCdrSnapshot((CdrSnapshot) message);
             } else if (message instanceof Heartbeat) {
                 handleHeartbeat((Heartbeat) message);
             } else if (message instanceof RemoteClientError) {
@@ -59,6 +61,8 @@ class Reporter extends UntypedActor {
                 RemoteClientShutdown event = (RemoteClientShutdown) message;
                 RemoteClient client = event.getClient();
                 logger.error("RemoteClientShutdown");
+            } else {
+                logger.info("Unknown {}", message);
             }
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
@@ -69,8 +73,24 @@ class Reporter extends UntypedActor {
         initSubscriptions();
     }
 
+    private void handleCdrSnapshot(CdrSnapshot snapshot) {
+        logger.info("Handle: {}", snapshot);
+        if (snapshot.getEtag() <= etag) {
+            return;
+        }
+        for (CdrEvent each : snapshot.getEvents()) {
+            handleCdrEvent(each);
+        }
+    }
+
     private void handleCdrEvent(CdrEvent cdrEvent) {
+        if (cdrEvent.getEtag() <= etag) {
+            logger.info("Ignorig event with etag {} <= current etag {} : {}", new Object[] { cdrEvent.getEtag(), etag,
+                    cdrEvent });
+            return;
+        }
         logger.info("Handle: {}", cdrEvent.toString());
+
         PrintWriter writer = null;
         try {
             writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream("./logs/cdr"
@@ -83,6 +103,7 @@ class Reporter extends UntypedActor {
                 writer.close();
             }
         }
+        etag = cdrEvent.getEtag();
     }
 
     private List<ActorRef> interestedInPublishers() {

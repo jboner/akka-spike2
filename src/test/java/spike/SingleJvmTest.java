@@ -21,16 +21,15 @@ public abstract class SingleJvmTest {
     @Before
     public void setUp() throws Exception {
         if (isServiceNode1ToBeStarted()) {
-            serviceNode1 = new ServiceNode(0);
-            serviceNode1.start();
+            startServiceNode1();
         }
         if (isServiceNode2ToBeStarted()) {
-            serviceNode2 = new ServiceNode(1);
-            serviceNode2.start();
+            startServiceNode2();
         }
-        // TODO test starting ReporterNode before ServiceNode
-        reportNode = new ReportNode();
-        reportNode.start();
+        if (isReporterNodeToBeStarted()) {
+            // TODO test starting ReporterNode before ServiceNode
+            startReportNode();
+        }
 
         // TODO we should not need this sleep, right now it is needed for all
         // subscriptions to be initialized
@@ -42,11 +41,30 @@ public abstract class SingleJvmTest {
         }
     }
 
+    private void startServiceNode1() {
+        serviceNode1 = new ServiceNode(0);
+        serviceNode1.start();
+    }
+
+    private void startServiceNode2() {
+        serviceNode2 = new ServiceNode(1);
+        serviceNode2.start();
+    }
+
+    private void startReportNode() {
+        reportNode = new ReportNode();
+        reportNode.start();
+    }
+
     protected boolean isServiceNode1ToBeStarted() {
         return true;
     }
 
     protected boolean isServiceNode2ToBeStarted() {
+        return true;
+    }
+
+    protected boolean isReporterNodeToBeStarted() {
         return true;
     }
 
@@ -90,28 +108,26 @@ public abstract class SingleJvmTest {
                 if (executor.isShutdown()) {
                     return;
                 }
-                serviceNode1.start();
+                startServiceNode1();
             }
         };
         executor.schedule(startServiceNode1, delay, timeUnit);
     }
 
     protected void startServiceNode2After(long delay, TimeUnit timeUnit) {
-
         Runnable startServiceNode2 = new Runnable() {
             @Override
             public void run() {
                 if (executor.isShutdown()) {
                     return;
                 }
-                serviceNode2.start();
+                startServiceNode2();
             }
         };
         executor.schedule(startServiceNode2, delay, timeUnit);
     }
 
     protected void killServiceNode2After(long delay, TimeUnit timeUnit) {
-
         Runnable killServiceNode2 = new Runnable() {
             @Override
             public void run() {
@@ -122,6 +138,19 @@ public abstract class SingleJvmTest {
             }
         };
         executor.schedule(killServiceNode2, delay, timeUnit);
+    }
+
+    protected void startReportNodeAfter(long delay, TimeUnit timeUnit) {
+        Runnable startReportNode = new Runnable() {
+            @Override
+            public void run() {
+                if (executor.isShutdown()) {
+                    return;
+                }
+                startReportNode();
+            }
+        };
+        executor.schedule(startReportNode, delay, timeUnit);
     }
 
     protected File resultFile() {

@@ -10,14 +10,14 @@ public class Subscribe implements Serializable {
     }
 
     private final Type type;
-    private final String fromEtag;
+    private final long fromEtag;
 
-    public Subscribe(Type type, String fromEtag) {
+    public Subscribe(Type type, long fromEtag) {
         this.type = type;
         this.fromEtag = fromEtag;
     }
 
-    public String getFromEtag() {
+    public long getFromEtag() {
         return fromEtag;
     }
 
