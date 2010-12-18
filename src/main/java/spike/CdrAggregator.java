@@ -70,10 +70,9 @@ public class CdrAggregator extends UntypedActor {
         if (getContext().getSender().isDefined()) {
             ActorRef senderRef = getContext().getSender().get();
             publisher.addSubscriber(senderRef, event);
-            if (publisher.isPrimaryNode()) {
-                CdrSnapshot snapshot = createSnapshot(event.getFromEtag());
-                senderRef.sendOneWay(snapshot);
-            }
+
+            CdrSnapshot snapshot = createSnapshot(event.getFromEtag());
+            publisher.publishSnapshot(snapshot, senderRef, event.getType());
         }
     }
 
@@ -136,7 +135,7 @@ public class CdrAggregator extends UntypedActor {
     private CdrSnapshot createSnapshot(long fromEtag) {
         List<CdrEvent> events = new ArrayList<CdrEvent>();
         for (CdrEvent each : history) {
-            if (each.getEtag() >= fromEtag) {
+            if (each.getEtag() > fromEtag) {
                 events.add(each);
             }
         }

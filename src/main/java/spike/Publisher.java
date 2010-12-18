@@ -51,14 +51,27 @@ public class Publisher {
         publish(event, subscribers.get(Subscribe.Type.NORMAL));
     }
 
+    public void publishSnapshot(Object event, ActorRef subscriber, Subscribe.Type subscriptionType) {
+        if (subscriptionType == Subscribe.Type.NORMAL) {
+            publish(event, subscriber);
+        } else if (isPrimaryNode
+                && (subscriptionType == Subscribe.Type.BUDDY || subscriptionType == Subscribe.Type.PRIMARY_ONLY)) {
+            publish(event, subscriber);
+        }
+    }
+
     private void publish(Object event, List<ActorRef> toSubscribers) {
         for (ActorRef subscriber : toSubscribers) {
-            try {
-                subscriber.sendOneWay(event);
-                logger.info("Published: {}", event);
-            } catch (RuntimeException e) {
-                logger.info("Failed to publish: {}", event);
-            }
+            publish(event, subscriber);
+        }
+    }
+
+    private void publish(Object event, ActorRef subscriber) {
+        try {
+            subscriber.sendOneWay(event);
+            logger.info("Published: {}", event);
+        } catch (RuntimeException e) {
+            logger.info("Failed to publish: {}", event);
         }
     }
 

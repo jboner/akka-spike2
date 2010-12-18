@@ -66,11 +66,11 @@ public class ProxyCallMonitor extends UntypedActor {
 
             DialogSnapshot snapshot;
             if (event.getFromEtag() < etag) {
-                snapshot = createDialogSnapshot();
+                snapshot = createDialogSnapshot(event.getFromEtag());
             } else {
                 snapshot = new DialogSnapshot(etag, new ArrayList<DialogEvent>());
             }
-            senderRef.sendOneWay(snapshot);
+            publisher.publishSnapshot(snapshot, senderRef, event.getType());
         }
     }
 
@@ -144,10 +144,14 @@ public class ProxyCallMonitor extends UntypedActor {
         return new DialogEvent(req.getCallId(), req.getEventId(), factor * req.getInc(), req.isDone(), etag);
     }
 
-    private DialogSnapshot createDialogSnapshot() {
+    private DialogSnapshot createDialogSnapshot(long fromEtag) {
         List<DialogEvent> allEvents = new ArrayList<DialogEvent>();
         for (List<DialogEvent> eachList : dialogEvents.values()) {
-            allEvents.addAll(eachList);
+            for (DialogEvent each : eachList) {
+                if (each.getEtag() > fromEtag) {
+                    allEvents.add(each);
+                }
+            }
         }
         Collections.sort(allEvents, new Comparator<DialogEvent>() {
             @Override
