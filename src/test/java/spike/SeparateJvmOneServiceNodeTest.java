@@ -6,7 +6,6 @@ import static spike.TestHelper.sleep;
 
 import java.io.File;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -18,7 +17,6 @@ import org.junit.Test;
  * </pre>
  * 
  */
-@Ignore
 public class SeparateJvmOneServiceNodeTest extends SeparateJvmTest {
 
     @Override

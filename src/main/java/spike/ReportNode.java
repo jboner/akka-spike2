@@ -67,7 +67,7 @@ public class ReportNode {
     private void addRemoteClientListeners() {
         ActorRef listener = actorOf(RemoteClientListener.class).start();
         for (RemoteLookupInfo each : SystemConfiguration.cdrAggregatorInfos) {
-            RemoteClient.clientFor(each.id, each.port).addListener(listener);
+            RemoteClient.clientFor(each.host, each.port).addListener(listener);
         }
     }
 

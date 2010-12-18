@@ -106,7 +106,7 @@ public class CdrAggregator extends UntypedActor {
         logger.info("Handle: {}", event);
 
         if (event.isDone()) {
-            if (getContext().getId().endsWith("-2")) {
+            if (publisher.isPrimaryNode() && getContext().getId().endsWith("-2")) {
                 // TODO these never reach Reporter after failover
                 logger.info("Should publish from secondary: {}", event);
             }

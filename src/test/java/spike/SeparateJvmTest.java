@@ -19,11 +19,11 @@ public abstract class SeparateJvmTest {
     @Before
     public void setUp() throws Exception {
         if (isServiceNode1ToBeStarted()) {
-            servicenode1Process = startJVM(ServiceNode.class, "1");
+            servicenode1Process = startJVM(ServiceNode.class, "0");
             processes.add(servicenode1Process);
         }
         if (isServiceNode2ToBeStarted()) {
-            servicenode2Process = startJVM(ServiceNode.class, "2");
+            servicenode2Process = startJVM(ServiceNode.class, "1");
             processes.add(servicenode2Process);
         }
         reportProcess = startJVM(ReportNode.class, null);

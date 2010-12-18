@@ -110,7 +110,7 @@ class Reporter extends UntypedActor {
         List<ActorRef> result = new ArrayList<ActorRef>();
         for (RemoteLookupInfo each : SystemConfiguration.cdrAggregatorInfos) {
             ActorRef publisher = RemoteClient.actorFor(each.id, each.host, each.port);
-            RemoteClient.clientFor(each.id, each.port).addListener(getContext());
+            RemoteClient.clientFor(each.host, each.port).addListener(getContext());
             result.add(publisher);
         }
         return result;
@@ -118,7 +118,7 @@ class Reporter extends UntypedActor {
 
     private void addRemoteClientListeners() {
         for (RemoteLookupInfo each : SystemConfiguration.cdrAggregatorInfos) {
-            RemoteClient.clientFor(each.id, each.port).addListener(getContext());
+            RemoteClient.clientFor(each.host, each.port).addListener(getContext());
         }
     }
 
