@@ -47,7 +47,7 @@ public class ReportNode {
         reporter = actorOf(new UntypedActorFactory() {
             @Override
             public Actor create() {
-                return new Reporter(lookupInfo.id);
+                return new Reporter(lookupInfo);
             }
         });
         reportnode.register(lookupInfo.id, reporter);

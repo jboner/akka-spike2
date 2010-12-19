@@ -27,13 +27,11 @@ public abstract class SingleJvmTest {
             startServiceNode2();
         }
         if (isReporterNodeToBeStarted()) {
-            // TODO test starting ReporterNode before ServiceNode
             startReportNode();
         }
 
-        // TODO we should not need this sleep, right now it is needed for all
-        // subscriptions to be initialized
-        sleep(7000);
+        // needed for all subscriptions to be initialized
+        sleep(1100);
 
         File resultFile = resultFile();
         if (resultFile.exists()) {

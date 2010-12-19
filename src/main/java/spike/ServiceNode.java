@@ -48,13 +48,13 @@ public class ServiceNode {
         proxyCallMonitor = actorOf(new UntypedActorFactory() {
             @Override
             public Actor create() {
-                return new ProxyCallMonitor(proxyCallMonitorInfo.id);
+                return new ProxyCallMonitor(proxyCallMonitorInfo);
             }
         });
         cdrAggregator = actorOf(new UntypedActorFactory() {
             @Override
             public Actor create() {
-                return new CdrAggregator(cdrAggregatorInfo.id, proxyCallMonitor);
+                return new CdrAggregator(cdrAggregatorInfo, proxyCallMonitor);
             }
         });
         servicenodeServer.register(proxyCallMonitorInfo.id, proxyCallMonitor);

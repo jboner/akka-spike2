@@ -22,11 +22,12 @@ public class CdrAggregator extends UntypedActor {
     private final Publisher publisher;
     private boolean subscriptionsInitialized;
 
-    public CdrAggregator(String id, ActorRef proxyCallMonitor) {
-        logger = LoggerFactory.getLogger(id);
-        getContext().setId(id);
+    public CdrAggregator(SystemConfiguration.RemoteLookupInfo lookupInfo, ActorRef proxyCallMonitor) {
+        logger = LoggerFactory.getLogger(lookupInfo.id);
+        getContext().setId(lookupInfo.id);
         this.proxyCallMonitor = proxyCallMonitor;
         publisher = new Publisher(logger);
+        getContext().setHomeAddress(lookupInfo.host, lookupInfo.port);
     }
 
     @Override

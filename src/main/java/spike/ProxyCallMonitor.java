@@ -24,10 +24,11 @@ public class ProxyCallMonitor extends UntypedActor {
     private long etag;
     private boolean subscriptionsInitialized;
 
-    public ProxyCallMonitor(String id) {
-        logger = LoggerFactory.getLogger(id);
-        getContext().setId(id);
+    public ProxyCallMonitor(SystemConfiguration.RemoteLookupInfo lookupInfo) {
+        logger = LoggerFactory.getLogger(lookupInfo.id);
+        getContext().setId(lookupInfo.id);
         publisher = new Publisher(logger);
+        getContext().setHomeAddress(lookupInfo.host, lookupInfo.port);
     }
 
     @Override

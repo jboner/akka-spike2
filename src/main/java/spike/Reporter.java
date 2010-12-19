@@ -25,10 +25,12 @@ class Reporter extends UntypedActor {
     private final Logger logger;
     private long etag;
     private boolean subscriptionsInitialized;
+    private boolean remoteClientListenerInitialized;
 
-    public Reporter(String id) {
-        logger = LoggerFactory.getLogger(id);
-        getContext().setId(id);
+    public Reporter(SystemConfiguration.RemoteLookupInfo lookupInfo) {
+        logger = LoggerFactory.getLogger(lookupInfo.id);
+        getContext().setId(lookupInfo.id);
+        getContext().setHomeAddress(lookupInfo.host, lookupInfo.port);
     }
 
     @Override
@@ -45,6 +47,7 @@ class Reporter extends UntypedActor {
                 Throwable cause = event.getCause();
                 RemoteClient client = event.getClient();
                 logger.error("RemoteClientError");
+                // subscriptionsInitialized = false;
             } else if (message instanceof RemoteClientConnected) {
                 RemoteClientConnected event = (RemoteClientConnected) message;
                 RemoteClient client = event.getClient();
@@ -53,6 +56,7 @@ class Reporter extends UntypedActor {
                 RemoteClientDisconnected event = (RemoteClientDisconnected) message;
                 RemoteClient client = event.getClient();
                 logger.info("RemoteClientDisconnected");
+                // subscriptionsInitialized = false;
             } else if (message instanceof RemoteClientStarted) {
                 RemoteClientStarted event = (RemoteClientStarted) message;
                 RemoteClient client = event.getClient();
@@ -61,6 +65,7 @@ class Reporter extends UntypedActor {
                 RemoteClientShutdown event = (RemoteClientShutdown) message;
                 RemoteClient client = event.getClient();
                 logger.error("RemoteClientShutdown");
+                // subscriptionsInitialized = false;
             } else {
                 logger.info("Unknown {}", message);
             }
@@ -110,22 +115,26 @@ class Reporter extends UntypedActor {
         List<ActorRef> result = new ArrayList<ActorRef>();
         for (RemoteLookupInfo each : SystemConfiguration.cdrAggregatorInfos) {
             ActorRef publisher = RemoteClient.actorFor(each.id, each.host, each.port);
-            RemoteClient.clientFor(each.host, each.port).addListener(getContext());
             result.add(publisher);
         }
         return result;
     }
 
     private void addRemoteClientListeners() {
+        if (remoteClientListenerInitialized) {
+            return;
+        }
         for (RemoteLookupInfo each : SystemConfiguration.cdrAggregatorInfos) {
             RemoteClient.clientFor(each.host, each.port).addListener(getContext());
         }
+        remoteClientListenerInitialized = true;
     }
 
     private void initSubscriptions() {
         if (subscriptionsInitialized) {
             return;
         }
+        addRemoteClientListeners();
         for (ActorRef each : interestedInPublishers()) {
             subscribe(each);
         }
