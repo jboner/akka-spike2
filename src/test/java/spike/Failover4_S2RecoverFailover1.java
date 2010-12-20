@@ -24,7 +24,7 @@ public class Failover4_S2RecoverFailover1 extends Base {
         killServiceNode2After(26, SECONDS);
 
         EdgeProxy edgeProxy = new EdgeProxy();
-        edgeProxy.simulateLoad(1000, 30, SECONDS);
+        edgeProxy.simulateLoad(1000, 40, SECONDS);
 
         sleep(2, SECONDS);
 
