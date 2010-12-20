@@ -24,7 +24,7 @@ public class Failover2Test extends Base {
         EdgeProxy edgeProxy = new EdgeProxy();
         edgeProxy.simulateLoad(1000, 10, SECONDS);
 
-        sleep(1000);
+        sleep(1, SECONDS);
 
         compareFiles(referenceFile(1000), resultFile());
     }

@@ -47,7 +47,6 @@ class Reporter extends UntypedActor {
                 Throwable cause = event.getCause();
                 RemoteClient client = event.getClient();
                 logger.error("RemoteClientError {}:{}", client.hostname(), client.port());
-                // subscriptionsInitialized = false;
             } else if (message instanceof RemoteClientConnected) {
                 RemoteClientConnected event = (RemoteClientConnected) message;
                 RemoteClient client = event.getClient();
@@ -57,7 +56,6 @@ class Reporter extends UntypedActor {
                 RemoteClientDisconnected event = (RemoteClientDisconnected) message;
                 RemoteClient client = event.getClient();
                 logger.info("RemoteClientDisconnected {}:{}", client.hostname(), client.port());
-                // subscriptionsInitialized = false;
             } else if (message instanceof RemoteClientStarted) {
                 RemoteClientStarted event = (RemoteClientStarted) message;
                 RemoteClient client = event.getClient();
@@ -67,7 +65,6 @@ class Reporter extends UntypedActor {
                 RemoteClientShutdown event = (RemoteClientShutdown) message;
                 RemoteClient client = event.getClient();
                 logger.error("RemoteClientShutdown {}:{}", client.hostname(), client.port());
-                // subscriptionsInitialized = false;
             } else {
                 logger.info("Unknown {}", message);
             }

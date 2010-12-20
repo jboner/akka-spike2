@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.LoggerFactory;
 
 public class HeartbeatTimer extends Publisher {
-    ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     private final long interval;
     private final TimeUnit unit;
     private ScheduledFuture<?> scheduledFuture;

@@ -26,7 +26,7 @@ public class Failover4_S2RecoverFailover1 extends Base {
         EdgeProxy edgeProxy = new EdgeProxy();
         edgeProxy.simulateLoad(1000, 30, SECONDS);
 
-        sleep(2000);
+        sleep(2, SECONDS);
 
         compareFiles(referenceFile(1000), resultFile());
     }

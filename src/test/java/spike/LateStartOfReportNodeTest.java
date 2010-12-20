@@ -24,7 +24,7 @@ public class LateStartOfReportNodeTest extends Base {
         EdgeProxy edgeProxy = new EdgeProxy();
         edgeProxy.simulateLoad(1000, 5, SECONDS);
 
-        sleep(1000);
+        sleep(1, SECONDS);
 
         compareFiles(referenceFile(1000), resultFile());
     }

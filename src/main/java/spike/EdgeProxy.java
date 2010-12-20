@@ -67,13 +67,6 @@ public class EdgeProxy {
         String callId = "d" + (i % 3);
         SipReq req = new SipReq(callId, String.valueOf(i), inc, done);
         logger.info("Sending: {}", req);
-        // TODO how to detect success/fail, know if service is available?
-        // try {
-        // servicenode.sendOneWay(req);
-        // } catch (RuntimeException e) {
-        // e.printStackTrace();
-        // }
-
         try {
             activeServiceNode.setTimeout(7000);
             Future<?> future = activeServiceNode.sendRequestReplyFuture(req);

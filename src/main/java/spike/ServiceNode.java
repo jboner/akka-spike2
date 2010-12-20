@@ -59,8 +59,6 @@ public class ServiceNode {
         });
         servicenodeServer.register(proxyCallMonitorInfo.id, proxyCallMonitor);
         servicenodeServer.register(cdrAggregatorInfo.id, cdrAggregator);
-        // TODO will it be local invokations between proxyCallMonitor and
-        // cdrAggregator?
 
         startHeartbeatTimer();
     }

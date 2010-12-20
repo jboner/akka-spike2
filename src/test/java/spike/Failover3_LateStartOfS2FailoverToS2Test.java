@@ -30,7 +30,7 @@ public class Failover3_LateStartOfS2FailoverToS2Test extends Base {
         EdgeProxy edgeProxy = new EdgeProxy();
         edgeProxy.simulateLoad(1000, 20, SECONDS);
 
-        sleep(2000);
+        sleep(2, SECONDS);
 
         compareFiles(referenceFile(1000), resultFile());
     }

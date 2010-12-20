@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class CdrSnapshot implements Serializable {
+    private static final long serialVersionUID = -4983109550267324728L;
     private final long etag;
     private final List<CdrEvent> events;
 

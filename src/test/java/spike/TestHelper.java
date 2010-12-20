@@ -1,9 +1,12 @@
 package spike;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.util.concurrent.TimeUnit;
 
 import junit.framework.Assert;
 
@@ -50,7 +53,8 @@ public class TestHelper {
         return process;
     }
 
-    public static void sleep(long millis) {
+    public static void sleep(long time, TimeUnit unit) {
+        long millis = MILLISECONDS.convert(time, unit);
         try {
             Thread.sleep(millis);
         } catch (InterruptedException e) {

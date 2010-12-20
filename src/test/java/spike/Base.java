@@ -1,5 +1,6 @@
 package spike;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static spike.TestHelper.sleep;
 
 import java.io.File;
@@ -31,7 +32,7 @@ public abstract class Base {
         }
 
         // needed for all subscriptions to be initialized
-        sleep(1100);
+        sleep(1100, MILLISECONDS);
 
         File resultFile = resultFile();
         if (resultFile.exists()) {

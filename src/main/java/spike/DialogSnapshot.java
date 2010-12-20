@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class DialogSnapshot implements Serializable {
+    private static final long serialVersionUID = 4864697179689993674L;
     private final long etag;
     private final List<DialogEvent> events;
 
