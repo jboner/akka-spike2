@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import spike.SystemConfiguration.RemoteLookupInfo;
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
+import akka.dispatch.Future;
 import akka.remote.RemoteClient;
 
 public class ProxyCallMonitor extends UntypedActor {
@@ -57,7 +58,7 @@ public class ProxyCallMonitor extends UntypedActor {
     }
 
     private void handleHeartbeat(Heartbeat message) {
-        initSubscriptions();
+        initSubscriptions(false);
     }
 
     private void handleSubscribe(Subscribe event) {
@@ -69,10 +70,18 @@ public class ProxyCallMonitor extends UntypedActor {
             if (event.getFromEtag() < etag) {
                 snapshot = createDialogSnapshot(event.getFromEtag());
             } else {
-                snapshot = new DialogSnapshot(etag, new ArrayList<DialogEvent>());
+                snapshot = createEmptyDialogSnapshot();
             }
-            publisher.publishSnapshot(snapshot, senderRef, event.getType());
+            if (event.isReplyImmediatly() && getContext().getSender().isDefined()) {
+                getContext().replyUnsafe(snapshot);
+            } else {
+                publisher.publishSnapshot(snapshot, senderRef, event.getType());
+            }
         }
+    }
+
+    private DialogSnapshot createEmptyDialogSnapshot() {
+        return new DialogSnapshot(etag, new ArrayList<DialogEvent>());
     }
 
     private void handleUnsubscribe(Unsubscribe event) {
@@ -100,10 +109,14 @@ public class ProxyCallMonitor extends UntypedActor {
 
     private void handleDialogSnapshot(DialogSnapshot snapshot) {
         logger.info("Handle: {}", snapshot);
+        subscriptionsInitialized = true;
         if (snapshot.getEtag() <= etag) {
+            logger.info("Ignorig snapshot with etag {} <= current etag {} : {}", new Object[] { snapshot.getEtag(),
+                    etag, snapshot });
             return;
         }
         for (DialogEvent each : snapshot.getEvents()) {
+            logger.info("Replay snapshot event {}", each);
             handleDialogEvent(each);
         }
     }
@@ -138,6 +151,11 @@ public class ProxyCallMonitor extends UntypedActor {
             publisher.setPrimaryNode(isPrimaryNode);
             HAState haState = new HAState(isPrimaryNode);
             publisher.publish(haState);
+            if (!subscriptionsInitialized) {
+                initSubscriptions(true);
+            }
+            DialogSnapshot snapshot = createDialogSnapshot(etag - 50);
+            publisher.publish(snapshot);
         }
     }
 
@@ -163,7 +181,9 @@ public class ProxyCallMonitor extends UntypedActor {
             }
         });
 
-        return new DialogSnapshot(etag, allEvents);
+        DialogSnapshot snapshot = new DialogSnapshot(etag, allEvents);
+        logger.info("Created snapshot: {}", snapshot);
+        return snapshot;
     }
 
     private List<ActorRef> buddies() {
@@ -180,19 +200,42 @@ public class ProxyCallMonitor extends UntypedActor {
         return result;
     }
 
-    private void initSubscriptions() {
-        if (subscriptionsInitialized) {
+    private void initSubscriptions(boolean replyImmeditatly) {
+        if (isPrimaryNode) {
             return;
         }
-        for (ActorRef each : buddies()) {
-            subscribe(each);
+        if (subscriptionsInitialized && etag > 0L) {
+            return;
         }
-        subscriptionsInitialized = true;
+
+        for (ActorRef each : buddies()) {
+            subscribe(each, replyImmeditatly);
+        }
+
     }
 
-    private void subscribe(ActorRef buddy) {
-        // TODO probably we should reduce timeout for this
-        buddy.sendOneWay(new Subscribe(Subscribe.Type.BUDDY, etag), getContext());
+    private void subscribe(ActorRef buddy, boolean replyImmeditatly) {
+        Subscribe subscribeEvent = new Subscribe(Subscribe.Type.BUDDY, etag, replyImmeditatly);
+        if (replyImmeditatly) {
+            try {
+                logger.info("Send subscription: {}", subscribeEvent);
+                buddy.setTimeout(2000);
+                @SuppressWarnings("unchecked")
+                Future<DialogSnapshot> future = (Future<DialogSnapshot>) buddy.sendRequestReplyFuture(subscribeEvent,
+                        getContext());
+                future.await();
+                if (future.isCompleted()) {
+                    DialogSnapshot snapshot = future.result().get();
+                    logger.info("Subscribe Reply: {}", snapshot);
+                    handleDialogSnapshot(snapshot);
+                }
+            } catch (RuntimeException e) {
+                logger.info("Subscribe Timeout: {}", subscribeEvent);
+            }
+        } else {
+            logger.info("Send subscription: {}", subscribeEvent);
+            buddy.sendOneWay(subscribeEvent, getContext());
+        }
     }
 
     @Override

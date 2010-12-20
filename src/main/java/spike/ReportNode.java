@@ -2,21 +2,9 @@ package spike;
 
 import static akka.actor.UntypedActor.actorOf;
 import static java.util.concurrent.TimeUnit.SECONDS;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import spike.SystemConfiguration.RemoteLookupInfo;
 import akka.actor.Actor;
 import akka.actor.ActorRef;
-import akka.actor.UntypedActor;
 import akka.actor.UntypedActorFactory;
-import akka.remote.RemoteClient;
-import akka.remote.RemoteClientConnected;
-import akka.remote.RemoteClientDisconnected;
-import akka.remote.RemoteClientError;
-import akka.remote.RemoteClientShutdown;
-import akka.remote.RemoteClientStarted;
 import akka.remote.RemoteServer;
 
 public class ReportNode {
@@ -34,7 +22,6 @@ public class ReportNode {
     public void start() {
         startRemoteServer();
         startActors();
-        addRemoteClientListeners();
         startHeartbeatTimer();
     }
 
@@ -54,7 +41,7 @@ public class ReportNode {
     }
 
     private void startHeartbeatTimer() {
-        heartbeatTimer.addSubscriber(reporter, new Subscribe(Subscribe.Type.NORMAL, 0));
+        heartbeatTimer.addSubscriber(reporter, new Subscribe(Subscribe.Type.NORMAL, 0, false));
         heartbeatTimer.start();
     }
 
@@ -64,45 +51,4 @@ public class ReportNode {
         reportnode.shutdown();
     }
 
-    private void addRemoteClientListeners() {
-        ActorRef listener = actorOf(RemoteClientListener.class).start();
-        for (RemoteLookupInfo each : SystemConfiguration.cdrAggregatorInfos) {
-            RemoteClient.clientFor(each.host, each.port).addListener(listener);
-        }
-    }
-
-    public static class RemoteClientListener extends UntypedActor {
-
-        private final Logger logger = LoggerFactory.getLogger(getClass());
-
-        @Override
-        public void onReceive(Object message) throws Exception {
-            try {
-                if (message instanceof RemoteClientError) {
-                    RemoteClientError event = (RemoteClientError) message;
-                    Throwable cause = event.getCause();
-                    RemoteClient client = event.getClient();
-                    logger.error("RemoteClientError");
-                } else if (message instanceof RemoteClientConnected) {
-                    RemoteClientConnected event = (RemoteClientConnected) message;
-                    RemoteClient client = event.getClient();
-                    logger.info("RemoteClientConnected");
-                } else if (message instanceof RemoteClientDisconnected) {
-                    RemoteClientDisconnected event = (RemoteClientDisconnected) message;
-                    RemoteClient client = event.getClient();
-                    logger.info("RemoteClientDisconnected");
-                } else if (message instanceof RemoteClientStarted) {
-                    RemoteClientStarted event = (RemoteClientStarted) message;
-                    RemoteClient client = event.getClient();
-                    logger.error("RemoteClientStarted");
-                } else if (message instanceof RemoteClientShutdown) {
-                    RemoteClientShutdown event = (RemoteClientShutdown) message;
-                    RemoteClient client = event.getClient();
-                    logger.error("RemoteClientShutdown");
-                }
-            } catch (Exception e) {
-                logger.error(e.getMessage(), e);
-            }
-        }
-    }
 }

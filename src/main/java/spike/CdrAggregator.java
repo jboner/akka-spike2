@@ -56,9 +56,12 @@ public class CdrAggregator extends UntypedActor {
     private void handleDialogSnapshot(DialogSnapshot snapshot) {
         logger.info("Handle: {}", snapshot);
         if (snapshot.getEtag() <= inEtag) {
+            logger.info("Ignorig snapshot with etag {} <= current etag {} : {}", new Object[] { snapshot.getEtag(),
+                    inEtag, snapshot });
             return;
         }
         for (DialogEvent each : snapshot.getEvents()) {
+            logger.info("Replay snapshot event {}", each);
             handleDialogEvent(each);
         }
     }
@@ -87,6 +90,10 @@ public class CdrAggregator extends UntypedActor {
     private void handleHAState(HAState event) {
         logger.info("Handle: {}", event);
         publisher.setPrimaryNode(event.isPrimaryNode());
+        if (event.isPrimaryNode()) {
+            CdrSnapshot snapshot = createSnapshot(outEtag - 50);
+            publisher.publish(snapshot);
+        }
     }
 
     private void handleDialogEvent(DialogEvent event) {
@@ -107,10 +114,6 @@ public class CdrAggregator extends UntypedActor {
         logger.info("Handle: {}", event);
 
         if (event.isDone()) {
-            if (publisher.isPrimaryNode() && getContext().getId().endsWith("-2")) {
-                // TODO these never reach Reporter after failover
-                logger.info("Should publish from secondary: {}", event);
-            }
             publishCdrEvent(callId, event.getEventId(), event.getEtag());
             currentState.remove(callId);
         }
@@ -140,14 +143,18 @@ public class CdrAggregator extends UntypedActor {
                 events.add(each);
             }
         }
-        return new CdrSnapshot(outEtag, events);
+        CdrSnapshot snapshot = new CdrSnapshot(outEtag, events);
+        logger.info("Created snapshot: {}", snapshot);
+        return snapshot;
     }
 
     private void initSubscriptions() {
-        if (subscriptionsInitialized) {
+        if (subscriptionsInitialized && inEtag > 0L) {
             return;
         }
-        proxyCallMonitor.sendOneWay(new Subscribe(Subscribe.Type.NORMAL, inEtag), getContext());
+        Subscribe subscribeEvent = new Subscribe(Subscribe.Type.NORMAL, inEtag, false);
+        logger.info("Send subscription: {}", subscribeEvent);
+        proxyCallMonitor.sendOneWay(subscribeEvent, getContext());
         subscriptionsInitialized = true;
     }
 

@@ -31,11 +31,21 @@ public class Publisher {
     }
 
     public void addSubscriber(ActorRef subscriber, Subscribe subscribeEvent) {
-        List<ActorRef> subscribersForType = subscribers.get(subscribeEvent.getType());
-        if (!subscribersForType.contains(subscriber)) {
+        if (!hasSubscriber(subscriber, subscribeEvent.getType())) {
             logger.info("Added subscriber {} {}", subscriber.getId(), subscribeEvent.getType());
+            List<ActorRef> subscribersForType = subscribers.get(subscribeEvent.getType());
             subscribersForType.add(subscriber);
         }
+    }
+
+    private boolean hasSubscriber(ActorRef subscriber, Subscribe.Type type) {
+        List<ActorRef> subscribersForType = subscribers.get(type);
+        for (ActorRef each : subscribersForType) {
+            if (each.getId().equals(subscriber.getId())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void removeSubscriber(ActorRef subscriber, Unsubscribe unsubscribeEvent) {

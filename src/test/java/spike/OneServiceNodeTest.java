@@ -4,8 +4,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static spike.TestHelper.compareFiles;
 import static spike.TestHelper.sleep;
 
-import java.io.File;
-
 import org.junit.Test;
 
 /**
@@ -17,7 +15,7 @@ import org.junit.Test;
  * </pre>
  * 
  */
-public class SingleJvmOneServiceNodeTest extends SingleJvmTest {
+public class OneServiceNodeTest extends Base {
 
     @Override
     protected boolean isServiceNode2ToBeStarted() {
@@ -31,7 +29,7 @@ public class SingleJvmOneServiceNodeTest extends SingleJvmTest {
 
         sleep(1000);
 
-        compareFiles(new File("./src/main/resources/cdr-reference-1000.txt"), resultFile());
+        compareFiles(referenceFile(1000), resultFile());
     }
 
 }

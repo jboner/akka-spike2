@@ -81,15 +81,10 @@ public class EdgeProxy {
             if (future.isCompleted()) {
                 logger.info("Reply: {}", req);
             }
-            // TODO what is diff between isExpired and TimeoutException?
-            // if (future.isExpired()) {
-            // logger.info("Future Timeout from from EdgeProxy: " + req);
-            // toggleServiceNode();
-            // produce(i, retry + 1);
-            // }
         } catch (RuntimeException e) {
             logger.info("Timeout: {}", req);
             toggleServiceNode();
+            sleep(3000);
             produce(i, retry + 1, sleepMillis);
         }
 

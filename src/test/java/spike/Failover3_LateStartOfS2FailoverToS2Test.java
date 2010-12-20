@@ -4,9 +4,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static spike.TestHelper.compareFiles;
 import static spike.TestHelper.sleep;
 
-import java.io.File;
-import java.util.concurrent.TimeUnit;
-
 import org.junit.Test;
 
 /**
@@ -18,7 +15,7 @@ import org.junit.Test;
  * </pre>
  * 
  */
-public class SingleJvmLateStartOfNode2Failover2Test extends SingleJvmTest {
+public class Failover3_LateStartOfS2FailoverToS2Test extends Base {
 
     @Override
     protected boolean isServiceNode2ToBeStarted() {
@@ -27,14 +24,14 @@ public class SingleJvmLateStartOfNode2Failover2Test extends SingleJvmTest {
 
     @Test
     public void testFailover() throws Exception {
-        startServiceNode2After(100, TimeUnit.MILLISECONDS);
-        killServiceNode1After(2000, TimeUnit.MILLISECONDS);
+        startServiceNode2After(4, SECONDS);
+        killServiceNode1After(15, SECONDS);
 
         EdgeProxy edgeProxy = new EdgeProxy();
-        edgeProxy.simulateLoad(1000, 5, SECONDS);
+        edgeProxy.simulateLoad(1000, 20, SECONDS);
 
         sleep(2000);
 
-        compareFiles(new File("./src/main/resources/cdr-reference-1000.txt"), resultFile());
+        compareFiles(referenceFile(1000), resultFile());
     }
 }

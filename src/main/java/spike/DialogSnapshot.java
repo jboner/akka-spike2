@@ -24,7 +24,7 @@ public class DialogSnapshot implements Serializable {
 
     @Override
     public String toString() {
-        return "DialogSnapshot up to etag: " + etag;
+        return "DialogSnapshot up to etag: " + etag + " containing " + events.size() + " events";
     }
 
 }

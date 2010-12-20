@@ -32,7 +32,7 @@
       <fileNamePattern>./logs/akka.log.%d{yyyy-MM-dd-HH}</fileNamePattern>
     </rollingPolicy>
   </appender>
-  <logger name="se.scalablesolutions" level="DEBUG"/>
+  <logger name="spike.HeartbeatTimer" level="ERROR"/>
   <root level="INFO">
     <appender-ref ref="stdout"/>
     <appender-ref ref="R"/>

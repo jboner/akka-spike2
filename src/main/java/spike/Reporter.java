@@ -46,25 +46,27 @@ class Reporter extends UntypedActor {
                 RemoteClientError event = (RemoteClientError) message;
                 Throwable cause = event.getCause();
                 RemoteClient client = event.getClient();
-                logger.error("RemoteClientError");
+                logger.error("RemoteClientError {}:{}", client.hostname(), client.port());
                 // subscriptionsInitialized = false;
             } else if (message instanceof RemoteClientConnected) {
                 RemoteClientConnected event = (RemoteClientConnected) message;
                 RemoteClient client = event.getClient();
-                logger.info("RemoteClientConnected");
+                logger.info("RemoteClientConnected {}:{}", client.hostname(), client.port());
+                subscriptionsInitialized = false;
             } else if (message instanceof RemoteClientDisconnected) {
                 RemoteClientDisconnected event = (RemoteClientDisconnected) message;
                 RemoteClient client = event.getClient();
-                logger.info("RemoteClientDisconnected");
+                logger.info("RemoteClientDisconnected {}:{}", client.hostname(), client.port());
                 // subscriptionsInitialized = false;
             } else if (message instanceof RemoteClientStarted) {
                 RemoteClientStarted event = (RemoteClientStarted) message;
                 RemoteClient client = event.getClient();
-                logger.error("RemoteClientStarted");
+                logger.error("RemoteClientStarted {}:{}", client.hostname(), client.port());
+                subscriptionsInitialized = false;
             } else if (message instanceof RemoteClientShutdown) {
                 RemoteClientShutdown event = (RemoteClientShutdown) message;
                 RemoteClient client = event.getClient();
-                logger.error("RemoteClientShutdown");
+                logger.error("RemoteClientShutdown {}:{}", client.hostname(), client.port());
                 // subscriptionsInitialized = false;
             } else {
                 logger.info("Unknown {}", message);
@@ -81,6 +83,8 @@ class Reporter extends UntypedActor {
     private void handleCdrSnapshot(CdrSnapshot snapshot) {
         logger.info("Handle: {}", snapshot);
         if (snapshot.getEtag() <= etag) {
+            logger.info("Ignorig snapshot with etag {} <= current etag {} : {}", new Object[] { snapshot.getEtag(),
+                    etag, snapshot });
             return;
         }
         for (CdrEvent each : snapshot.getEvents()) {
@@ -121,7 +125,7 @@ class Reporter extends UntypedActor {
     }
 
     private void addRemoteClientListeners() {
-        if (remoteClientListenerInitialized) {
+        if (remoteClientListenerInitialized && etag > 0L) {
             return;
         }
         for (RemoteLookupInfo each : SystemConfiguration.cdrAggregatorInfos) {
@@ -131,7 +135,7 @@ class Reporter extends UntypedActor {
     }
 
     private void initSubscriptions() {
-        if (subscriptionsInitialized) {
+        if (subscriptionsInitialized && etag > 0L) {
             return;
         }
         addRemoteClientListeners();
@@ -142,7 +146,9 @@ class Reporter extends UntypedActor {
     }
 
     private void subscribe(ActorRef publisher) {
-        publisher.sendOneWay(new Subscribe(Subscribe.Type.PRIMARY_ONLY, etag), getContext());
+        Subscribe subscribeEvent = new Subscribe(Subscribe.Type.PRIMARY_ONLY, etag, false);
+        logger.info("Send subscription: {}", subscribeEvent);
+        publisher.sendOneWay(subscribeEvent, getContext());
     }
 
     @Override

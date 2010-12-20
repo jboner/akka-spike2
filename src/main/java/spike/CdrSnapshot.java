@@ -24,7 +24,7 @@ public class CdrSnapshot implements Serializable {
 
     @Override
     public String toString() {
-        return "CdrSnapshot up to etag: " + etag;
+        return "CdrSnapshot up to etag: " + etag + " containing " + events.size() + " events";
     }
 
 }

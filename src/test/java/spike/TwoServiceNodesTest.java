@@ -4,8 +4,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static spike.TestHelper.compareFiles;
 import static spike.TestHelper.sleep;
 
-import java.io.File;
-
 import org.junit.Test;
 
 /**
@@ -17,7 +15,7 @@ import org.junit.Test;
  * </pre>
  * 
  */
-public class SingleJvmTwoServiceNodesTest extends SingleJvmTest {
+public class TwoServiceNodesTest extends Base {
 
     @Test
     public void testNormal() throws Exception {
@@ -26,7 +24,7 @@ public class SingleJvmTwoServiceNodesTest extends SingleJvmTest {
 
         sleep(1000);
 
-        compareFiles(new File("./src/main/resources/cdr-reference-1000.txt"), resultFile());
+        compareFiles(referenceFile(1000), resultFile());
     }
 
 }

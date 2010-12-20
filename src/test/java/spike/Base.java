@@ -12,7 +12,7 @@ import org.junit.Before;
 
 import akka.actor.ActorRegistry;
 
-public abstract class SingleJvmTest {
+public abstract class Base {
     protected ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
     protected ReportNode reportNode;
     protected ServiceNode serviceNode1;
@@ -153,6 +153,10 @@ public abstract class SingleJvmTest {
 
     protected File resultFile() {
         return new File("./logs/cdr.txt");
+    }
+
+    protected File referenceFile(int n) {
+        return new File("./src/main/resources/cdr-reference-" + n + ".txt");
     }
 
 }
