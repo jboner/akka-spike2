@@ -143,7 +143,7 @@ class Reporter extends UntypedActor {
     }
 
     private void subscribe(ActorRef publisher) {
-        Subscribe subscribeEvent = new Subscribe(Subscribe.Type.PRIMARY_ONLY, etag, false);
+        Subscribe subscribeEvent = new Subscribe(Subscribe.Type.PRIMARY_ONLY, etag);
         logger.info("Send subscription: {}", subscribeEvent);
         publisher.sendOneWay(subscribeEvent, getContext());
     }

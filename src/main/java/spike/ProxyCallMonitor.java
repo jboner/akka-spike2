@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import spike.SystemConfiguration.RemoteLookupInfo;
 import akka.actor.ActorRef;
 import akka.actor.UntypedActor;
-import akka.dispatch.Future;
 import akka.remote.RemoteClient;
 
 public class ProxyCallMonitor extends UntypedActor {
@@ -72,11 +71,7 @@ public class ProxyCallMonitor extends UntypedActor {
             } else {
                 snapshot = createEmptyDialogSnapshot();
             }
-            if (event.isReplyImmediatly() && getContext().getSender().isDefined()) {
-                getContext().replyUnsafe(snapshot);
-            } else {
-                publisher.publishSnapshot(snapshot, senderRef, event.getType());
-            }
+            publisher.publishSnapshot(snapshot, senderRef, event.getType());
         }
     }
 
@@ -215,35 +210,9 @@ public class ProxyCallMonitor extends UntypedActor {
     }
 
     private void subscribe(ActorRef buddy, boolean replyImmeditatly) {
-        Subscribe subscribeEvent = new Subscribe(Subscribe.Type.BUDDY, etag, replyImmeditatly);
-        if (replyImmeditatly) {
-            subscribeImmeditatly(buddy, subscribeEvent);
-        } else {
-            subscribeOneWay(buddy, subscribeEvent);
-        }
-    }
-
-    private void subscribeOneWay(ActorRef buddy, Subscribe subscribeEvent) {
+        Subscribe subscribeEvent = new Subscribe(Subscribe.Type.BUDDY, etag);
         logger.info("Send subscription: {}", subscribeEvent);
         buddy.sendOneWay(subscribeEvent, getContext());
-    }
-
-    private void subscribeImmeditatly(ActorRef buddy, Subscribe subscribeEvent) {
-        try {
-            logger.info("Send subscription: {}", subscribeEvent);
-            buddy.setTimeout(2000);
-            @SuppressWarnings("unchecked")
-            Future<DialogSnapshot> future = (Future<DialogSnapshot>) buddy.sendRequestReplyFuture(subscribeEvent,
-                    getContext());
-            future.await();
-            if (future.isCompleted()) {
-                DialogSnapshot snapshot = future.result().get();
-                logger.info("Subscribe Reply: {}", snapshot);
-                handleDialogSnapshot(snapshot);
-            }
-        } catch (RuntimeException e) {
-            logger.info("Subscribe Timeout: {}", subscribeEvent);
-        }
     }
 
     @Override

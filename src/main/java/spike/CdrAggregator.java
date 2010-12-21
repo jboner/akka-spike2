@@ -152,7 +152,7 @@ public class CdrAggregator extends UntypedActor {
         if (subscriptionsInitialized && inEtag > 0L) {
             return;
         }
-        Subscribe subscribeEvent = new Subscribe(Subscribe.Type.NORMAL, inEtag, false);
+        Subscribe subscribeEvent = new Subscribe(Subscribe.Type.NORMAL, inEtag);
         logger.info("Send subscription: {}", subscribeEvent);
         proxyCallMonitor.sendOneWay(subscribeEvent, getContext());
         subscriptionsInitialized = true;

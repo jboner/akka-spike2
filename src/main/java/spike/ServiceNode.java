@@ -64,8 +64,8 @@ public class ServiceNode {
     }
 
     private void startHeartbeatTimer() {
-        heartbeatTimer.addSubscriber(proxyCallMonitor, new Subscribe(Subscribe.Type.NORMAL, 0, false));
-        heartbeatTimer.addSubscriber(cdrAggregator, new Subscribe(Subscribe.Type.NORMAL, 0, false));
+        heartbeatTimer.addSubscriber(proxyCallMonitor, new Subscribe(Subscribe.Type.NORMAL, 0));
+        heartbeatTimer.addSubscriber(cdrAggregator, new Subscribe(Subscribe.Type.NORMAL, 0));
         heartbeatTimer.start();
     }
 

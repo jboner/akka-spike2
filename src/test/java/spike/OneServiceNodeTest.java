@@ -25,7 +25,7 @@ public class OneServiceNodeTest extends Base {
     @Test
     public void testNormal() throws Exception {
         EdgeProxy edgeProxy = new EdgeProxy();
-        edgeProxy.simulateLoad(1000, 5, SECONDS);
+        edgeProxy.simulateLoad(1000, 30, SECONDS);
 
         sleep(1, SECONDS);
 

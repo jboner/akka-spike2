@@ -11,12 +11,10 @@ public class Subscribe implements Serializable {
 
     private final Type type;
     private final long fromEtag;
-    private final boolean replyImmediatly;
 
-    public Subscribe(Type type, long fromEtag, boolean replyImmediately) {
+    public Subscribe(Type type, long fromEtag) {
         this.type = type;
         this.fromEtag = fromEtag;
-        replyImmediatly = replyImmediately;
     }
 
     public long getFromEtag() {
@@ -27,13 +25,9 @@ public class Subscribe implements Serializable {
         return type;
     }
 
-    public boolean isReplyImmediatly() {
-        return replyImmediatly;
-    }
-
     @Override
     public String toString() {
-        return "Subscribe fromEtag " + fromEtag + " " + type + (replyImmediatly ? " ReplyImmediatly" : "");
+        return "Subscribe fromEtag " + fromEtag + " " + type;
     }
 
 }
