@@ -10,7 +10,10 @@
 <configuration>
 
   <evaluator name="DISPLAY_EX_EVAL">
-    <expression>throwable instanceof java.nio.channels.NotYetConnectedException</expression>
+    <expression>throwable instanceof java.nio.channels.NotYetConnectedException ||
+    	throwable instanceof java.nio.channels.ClosedChannelException |
+    	throwable instanceof java.net.ConnectException
+    </expression>
   </evaluator>
   
   <!-- Errors were reported during translation. -->
