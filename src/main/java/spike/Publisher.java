@@ -3,6 +3,7 @@ package spike;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -28,18 +29,24 @@ public class Publisher {
 
     public void setPrimaryNode(boolean isPrimaryNode) {
         this.isPrimaryNode = isPrimaryNode;
+        if (!isPrimaryNode) {
+            removePrimaryNodeSubscriptions();
+        }
     }
 
     public void addSubscriber(ActorRef subscriber, Subscribe subscribeEvent) {
         if (!hasSubscriber(subscriber, subscribeEvent.getType())) {
-            logger.info("Added subscriber {} {}", subscriber.getId(), subscribeEvent.getType());
-            List<ActorRef> subscribersForType = subscribers.get(subscribeEvent.getType());
-            subscribersForType.add(subscriber);
+            if (isPrimaryNode || subscribeEvent.getType() == Subscribe.Type.NORMAL) {
+                logger.info("Added subscriber {} {}", subscriber.getId(), subscribeEvent.getType());
+                List<ActorRef> subscribersForType = subscribers.get(subscribeEvent.getType());
+                subscribersForType.add(subscriber);
+            }
         }
     }
 
     private boolean hasSubscriber(ActorRef subscriber, Subscribe.Type type) {
         List<ActorRef> subscribersForType = subscribers.get(type);
+        // equals is not based on id
         for (ActorRef each : subscribersForType) {
             if (each.getId().equals(subscriber.getId())) {
                 return true;
@@ -48,24 +55,31 @@ public class Publisher {
         return false;
     }
 
+    private void removePrimaryNodeSubscriptions() {
+        subscribers.get(Subscribe.Type.BUDDY).clear();
+        subscribers.get(Subscribe.Type.PRIMARY_ONLY).clear();
+    }
+
     public void removeSubscriber(ActorRef subscriber, Unsubscribe unsubscribeEvent) {
-        subscribers.get(unsubscribeEvent.getType()).remove(subscriber);
+        List<ActorRef> subscribersForType = subscribers.get(unsubscribeEvent.getType());
+        // equals is not based on id
+        ListIterator<ActorRef> iter = subscribersForType.listIterator();
+        while (iter.hasNext()) {
+            ActorRef each = iter.next();
+            if (each.getId().equals(subscriber.getId())) {
+                iter.remove();
+            }
+        }
     }
 
     public void publish(Object event) {
-        if (isPrimaryNode) {
-            publish(event, subscribers.get(Subscribe.Type.BUDDY));
-            publish(event, subscribers.get(Subscribe.Type.PRIMARY_ONLY));
-        }
-
+        publish(event, subscribers.get(Subscribe.Type.BUDDY));
+        publish(event, subscribers.get(Subscribe.Type.PRIMARY_ONLY));
         publish(event, subscribers.get(Subscribe.Type.NORMAL));
     }
 
     public void publishSnapshot(Object event, ActorRef subscriber, Subscribe.Type subscriptionType) {
-        if (subscriptionType == Subscribe.Type.NORMAL) {
-            publish(event, subscriber);
-        } else if (isPrimaryNode
-                && (subscriptionType == Subscribe.Type.BUDDY || subscriptionType == Subscribe.Type.PRIMARY_ONLY)) {
+        if (hasSubscriber(subscriber, subscriptionType)) {
             publish(event, subscriber);
         }
     }

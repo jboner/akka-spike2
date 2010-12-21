@@ -1,8 +1,6 @@
 package spike;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +17,7 @@ public class ProxyCallMonitor extends UntypedActor {
 
     private final Logger logger;
     private final Map<String, List<DialogEvent>> dialogEvents = new HashMap<String, List<DialogEvent>>();
+    private final List<DialogEvent> history = new ArrayList<DialogEvent>();
     private final Publisher publisher;
     private boolean isPrimaryNode;
     private long etag;
@@ -57,7 +56,7 @@ public class ProxyCallMonitor extends UntypedActor {
     }
 
     private void handleHeartbeat(Heartbeat message) {
-        initSubscriptions(false);
+        initSubscriptions();
     }
 
     private void handleSubscribe(Subscribe event) {
@@ -65,18 +64,9 @@ public class ProxyCallMonitor extends UntypedActor {
             ActorRef senderRef = getContext().getSender().get();
             publisher.addSubscriber(senderRef, event);
 
-            DialogSnapshot snapshot;
-            if (event.getFromEtag() < etag) {
-                snapshot = createDialogSnapshot(event.getFromEtag());
-            } else {
-                snapshot = createEmptyDialogSnapshot();
-            }
+            DialogSnapshot snapshot = createDialogSnapshot(event.getFromEtag());
             publisher.publishSnapshot(snapshot, senderRef, event.getType());
         }
-    }
-
-    private DialogSnapshot createEmptyDialogSnapshot() {
-        return new DialogSnapshot(etag, new ArrayList<DialogEvent>());
     }
 
     private void handleUnsubscribe(Unsubscribe event) {
@@ -135,6 +125,8 @@ public class ProxyCallMonitor extends UntypedActor {
         logger.info("Handle: {}", event);
 
         publisher.publish(event);
+        // TODO we should clean history sometime
+        history.add(event);
         if (event.isDone()) {
             dialogEvents.remove(callId);
         }
@@ -146,11 +138,6 @@ public class ProxyCallMonitor extends UntypedActor {
             publisher.setPrimaryNode(isPrimaryNode);
             HAState haState = new HAState(isPrimaryNode);
             publisher.publish(haState);
-            if (!subscriptionsInitialized) {
-                initSubscriptions(true);
-            }
-            DialogSnapshot snapshot = createDialogSnapshot(etag - 50);
-            publisher.publish(snapshot);
         }
     }
 
@@ -159,24 +146,13 @@ public class ProxyCallMonitor extends UntypedActor {
     }
 
     private DialogSnapshot createDialogSnapshot(long fromEtag) {
-        List<DialogEvent> allEvents = new ArrayList<DialogEvent>();
-        for (List<DialogEvent> eachList : dialogEvents.values()) {
-            for (DialogEvent each : eachList) {
-                if (each.getEtag() > fromEtag) {
-                    allEvents.add(each);
-                }
+        List<DialogEvent> events = new ArrayList<DialogEvent>();
+        for (DialogEvent each : history) {
+            if (each.getEtag() > fromEtag) {
+                events.add(each);
             }
         }
-        Collections.sort(allEvents, new Comparator<DialogEvent>() {
-            @Override
-            public int compare(DialogEvent o1, DialogEvent o2) {
-                long etag1 = o1.getEtag();
-                long etag2 = o2.getEtag();
-                return (etag1 < etag2 ? -1 : (etag1 == etag2 ? 0 : 1));
-            }
-        });
-
-        DialogSnapshot snapshot = new DialogSnapshot(etag, allEvents);
+        DialogSnapshot snapshot = new DialogSnapshot(etag, events);
         logger.info("Created snapshot: {}", snapshot);
         return snapshot;
     }
@@ -195,21 +171,21 @@ public class ProxyCallMonitor extends UntypedActor {
         return result;
     }
 
-    private void initSubscriptions(boolean replyImmeditatly) {
+    private void initSubscriptions() {
         if (isPrimaryNode) {
             return;
         }
-        if (subscriptionsInitialized && etag > 0L) {
+        if (subscriptionsInitialized) {
             return;
         }
 
         for (ActorRef each : buddies()) {
-            subscribe(each, replyImmeditatly);
+            subscribe(each);
         }
 
     }
 
-    private void subscribe(ActorRef buddy, boolean replyImmeditatly) {
+    private void subscribe(ActorRef buddy) {
         Subscribe subscribeEvent = new Subscribe(Subscribe.Type.BUDDY, etag);
         logger.info("Send subscription: {}", subscribeEvent);
         buddy.sendOneWay(subscribeEvent, getContext());

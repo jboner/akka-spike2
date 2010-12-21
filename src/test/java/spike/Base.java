@@ -31,7 +31,6 @@ public abstract class Base {
             startReportNode();
         }
 
-        // needed for all subscriptions to be initialized
         sleep(1100, MILLISECONDS);
 
         File resultFile = resultFile();

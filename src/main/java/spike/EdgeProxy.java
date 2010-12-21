@@ -77,7 +77,6 @@ public class EdgeProxy {
         } catch (RuntimeException e) {
             logger.info("Timeout: {}", req);
             toggleServiceNode();
-            sleep(3000);
             produce(i, retry + 1, sleepMillis);
         }
 

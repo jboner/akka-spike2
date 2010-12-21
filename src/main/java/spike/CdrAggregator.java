@@ -55,6 +55,7 @@ public class CdrAggregator extends UntypedActor {
 
     private void handleDialogSnapshot(DialogSnapshot snapshot) {
         logger.info("Handle: {}", snapshot);
+        subscriptionsInitialized = true;
         if (snapshot.getEtag() <= inEtag) {
             logger.info("Ignorig snapshot with etag {} <= current etag {} : {}", new Object[] { snapshot.getEtag(),
                     inEtag, snapshot });
@@ -89,11 +90,8 @@ public class CdrAggregator extends UntypedActor {
 
     private void handleHAState(HAState event) {
         logger.info("Handle: {}", event);
+        publisher.publish(event);
         publisher.setPrimaryNode(event.isPrimaryNode());
-        if (event.isPrimaryNode()) {
-            CdrSnapshot snapshot = createSnapshot(outEtag - 50);
-            publisher.publish(snapshot);
-        }
     }
 
     private void handleDialogEvent(DialogEvent event) {
@@ -122,8 +120,8 @@ public class CdrAggregator extends UntypedActor {
     private void publishCdrEvent(String callId, String eventId, long etag) {
         outEtag = etag;
         CdrEvent cdrEvent = createCdrEvent(callId, eventId, outEtag);
-        history.add(cdrEvent);
         // TODO we should clean history sometime
+        history.add(cdrEvent);
         publisher.publish(cdrEvent);
     }
 
@@ -149,13 +147,12 @@ public class CdrAggregator extends UntypedActor {
     }
 
     private void initSubscriptions() {
-        if (subscriptionsInitialized && inEtag > 0L) {
+        if (subscriptionsInitialized) {
             return;
         }
         Subscribe subscribeEvent = new Subscribe(Subscribe.Type.NORMAL, inEtag);
         logger.info("Send subscription: {}", subscribeEvent);
         proxyCallMonitor.sendOneWay(subscribeEvent, getContext());
-        subscriptionsInitialized = true;
     }
 
     @Override

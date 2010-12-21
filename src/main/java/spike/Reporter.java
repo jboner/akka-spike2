@@ -40,6 +40,8 @@ class Reporter extends UntypedActor {
                 handleCdrEvent((CdrEvent) message);
             } else if (message instanceof CdrSnapshot) {
                 handleCdrSnapshot((CdrSnapshot) message);
+            } else if (message instanceof HAState) {
+                handleHAState((HAState) message);
             } else if (message instanceof Heartbeat) {
                 handleHeartbeat((Heartbeat) message);
             } else if (message instanceof RemoteClientError) {
@@ -56,11 +58,11 @@ class Reporter extends UntypedActor {
                 RemoteClientDisconnected event = (RemoteClientDisconnected) message;
                 RemoteClient client = event.getClient();
                 logger.info("RemoteClientDisconnected {}:{}", client.hostname(), client.port());
+                subscriptionsInitialized = false;
             } else if (message instanceof RemoteClientStarted) {
                 RemoteClientStarted event = (RemoteClientStarted) message;
                 RemoteClient client = event.getClient();
                 logger.error("RemoteClientStarted {}:{}", client.hostname(), client.port());
-                subscriptionsInitialized = false;
             } else if (message instanceof RemoteClientShutdown) {
                 RemoteClientShutdown event = (RemoteClientShutdown) message;
                 RemoteClient client = event.getClient();
@@ -73,12 +75,19 @@ class Reporter extends UntypedActor {
         }
     }
 
+    private void handleHAState(HAState event) {
+        if (!event.isPrimaryNode()) {
+            subscriptionsInitialized = false;
+        }
+    }
+
     private void handleHeartbeat(Heartbeat message) {
         initSubscriptions();
     }
 
     private void handleCdrSnapshot(CdrSnapshot snapshot) {
         logger.info("Handle: {}", snapshot);
+        subscriptionsInitialized = true;
         if (snapshot.getEtag() <= etag) {
             logger.info("Ignorig snapshot with etag {} <= current etag {} : {}", new Object[] { snapshot.getEtag(),
                     etag, snapshot });
@@ -122,7 +131,7 @@ class Reporter extends UntypedActor {
     }
 
     private void addRemoteClientListeners() {
-        if (remoteClientListenerInitialized && etag > 0L) {
+        if (remoteClientListenerInitialized) {
             return;
         }
         for (RemoteLookupInfo each : SystemConfiguration.cdrAggregatorInfos) {
@@ -132,14 +141,13 @@ class Reporter extends UntypedActor {
     }
 
     private void initSubscriptions() {
-        if (subscriptionsInitialized && etag > 0L) {
+        if (subscriptionsInitialized) {
             return;
         }
         addRemoteClientListeners();
         for (ActorRef each : interestedInPublishers()) {
             subscribe(each);
         }
-        subscriptionsInitialized = true;
     }
 
     private void subscribe(ActorRef publisher) {
